@@ -67,12 +67,12 @@ class Game:
                     self.player.shoot("LEFT")
                 if event.key == pg.K_d:
                     self.player.shoot("RIGHT")
-                #if event.key == pg.K_SPACE:
-                #    self.player.move_around()
+                if event.key == pg.K_SPACE:
+                    print(self.map.get_layout())
 
     def render(self):
         self.screen.fill(SCREEN_COL)
-        self.draw_grid()
+        #self.draw_grid()
         #self.player.draw(self.screen)
         for sprite in self.all_sprites:
             self.screen.blit(sprite.image, self.camera.apply(sprite))
@@ -120,3 +120,6 @@ class Game:
                     screen[row][col] = "P"
 
         return screen
+
+
+

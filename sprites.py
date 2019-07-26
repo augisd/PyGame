@@ -18,7 +18,7 @@ class Player(pg.sprite.Sprite):
     def update(self):
         # Pickup coin
         pg.sprite.spritecollide(self, self.game.coins, True)
-        #print(self.vx, self.vy)
+        #print(self.x, self.y)
         self.get_keys()
         self.x += self.vx * self.game.dt
         self.y += self.vy * self.game.dt
@@ -32,9 +32,9 @@ class Player(pg.sprite.Sprite):
         if self.y > MAP_HEIGHT:
             self.y = MAP_HEIGHT
 
-        self.rect.x = self.x
+        self.rect.x = int(self.x / TILESIZE) * TILESIZE
         self.collide_with_walls("x")
-        self.rect.y = self.y
+        self.rect.y = int(self.y / TILESIZE) * TILESIZE
         self.collide_with_walls("y")
 
     def get_keys(self):
@@ -49,8 +49,6 @@ class Player(pg.sprite.Sprite):
             self.vy = -PLAYER_SPEED
         if keys[pg.K_DOWN]:
             self.vy = PLAYER_SPEED
-        if keys[pg.K_SPACE]:
-            self.move_around()
         # Normalize diagonal speed
         if self.vx != 0 and self.vy != 0:
             self.vx *= 0.7071

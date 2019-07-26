@@ -9,7 +9,9 @@ class Map:
         self.grid = 0
         self.width = GRIDWIDTH * 2
         self.height = GRIDHEIGHT * 2
+        self.map_layout = 0
         self.create_map()
+
 
     def create_map(self):
         walls = self.random_walk()
@@ -18,6 +20,7 @@ class Map:
         walls_adjacent = self.adjacent(walls)
         print()
         self.print_map(walls_adjacent)
+        self.map_layout = walls_adjacent
         self.grid = walls_adjacent
         self.fill_walls(walls_adjacent)
 
@@ -26,6 +29,9 @@ class Map:
             for j in range(len(grid[0])):
                 print(grid[i][j], end=" ")
             print()
+
+    def get_layout(self):
+        return self.map_layout
 
     def random_walk(self, height=GRIDHEIGHT,
                     width=GRIDWIDTH,
