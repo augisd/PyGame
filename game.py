@@ -24,8 +24,8 @@ class Game:
 
     def new_game(self):
         self.map = Map(self)
-        self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        #self.player = Explorer(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = Explorer(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.walls.draw(self.screen)
         self.camera = Camera(self.map.width, self.map.height)
