@@ -18,6 +18,7 @@ class Player(pg.sprite.Sprite):
     def update(self):
         # Pickup coin
         pg.sprite.spritecollide(self, self.game.coins, True)
+        #    self.game.player_model.explorer.increase_tendency()
         #print(self.x, self.y)
         self.get_keys()
         self.x += self.vx * self.game.dt

@@ -3,6 +3,7 @@ from sprites import *
 from settings import *
 from AI import *
 from map import *
+from playermodel import *
 
 class Game:
     def __init__(self):
@@ -23,9 +24,16 @@ class Game:
 
     def new_game(self):
         self.map = Map(self)
-        self.player = Explorer(self, PLAYER_START_POS[0], PLAYER_START_POS[1])#Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = Explorer(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+
         self.walls.draw(self.screen)
         self.camera = Camera(self.map.width, self.map.height)
+        for enemy in range(N_ENEMIES):
+            self.map.spawn_sprite(Enemy)
+        for coin in range(N_COINS):
+            self.map.spawn_sprite(Coin)
+        self.player_model = PlayerModel(self)
 
     def run(self):
         while self.playing:
@@ -35,9 +43,12 @@ class Game:
             self.render()
 
     def update(self):
+
         self.player.update()
         self.all_sprites.update()
         self.camera.update(self.player)
+        # Update player model tendencies before respawning sprites
+        self.player_model.update()
         if len(self.coins) < N_COINS:
            self.map.spawn_sprite(Coin)
         if len(self.enemies) < N_ENEMIES:
@@ -68,7 +79,7 @@ class Game:
                 if event.key == pg.K_d:
                     self.player.shoot("RIGHT")
                 if event.key == pg.K_SPACE:
-                    print(self.map.get_layout())
+                    print(self.player_model.print_model())
 
     def render(self):
         self.screen.fill(SCREEN_COL)

@@ -50,15 +50,12 @@ class Explorer(Player, pg.sprite.Sprite):
     def explore(self):
         if "C" in self.game.get_screen_objects():
             self.current_state = self.collect_coins
-        print("Exploring")
-        print(int(self.x / TILESIZE))
         # Move the player sprite around
         self.move_around()
 
     def collect_coins(self):
         if "C" not in self.game.get_screen_objects():
             self.current_state = self.explore
-        print("Collecting")
         # Move the player sprite towards the nearest coin
         go_to = self.get_closest_coin()
         self.go_to_coin(go_to)
@@ -81,38 +78,18 @@ class Explorer(Player, pg.sprite.Sprite):
         target_x = int(coord[0] / TILESIZE)
         target_y = int(coord[1] / TILESIZE)
         target = (target_y, target_x)
-        print("Target", target)
         start_x = int(self.x / TILESIZE)
         start_y = int(self.y / TILESIZE)
         start = (start_y, start_x)
-        print("Start", start)
         grid = self.game.map.map_layout
-        print("Map", grid)
         # (row, col)
         path = astar(grid, start, target)
-        print(path)
-        next_move = path[1]
+        if len(path) == 1:
+            next_move = path[0]
+        else:
+            next_move = path[1]
         self.vx = PLAYER_SPEED * (next_move[1] - start_x)
         self.vy = PLAYER_SPEED * (next_move[0] - start_y)
-
-    def move_to_coin(self, coin_coord):
-
-        coin_x = coin_coord[0]
-        coin_y = coin_coord[1]
-        print("moving to coin", coin_x, coin_y)
-        print("current coords", self.x, self.y)
-
-        if coin_x + TILESIZE / 4 > self.x > coin_x - TILESIZE / 4:
-
-            if self.y > coin_y:
-                self.y = -PLAYER_SPEED
-            elif self.y < coin_y:
-                self.y = PLAYER_SPEED
-        elif self.x > coin_x:
-            self.vx = -PLAYER_SPEED
-        elif self.x < coin_x:
-            self.vx = PLAYER_SPEED
-        print(self.vx)
 
     def move_around(self):
         # Re-implement Random Walk
