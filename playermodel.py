@@ -35,6 +35,8 @@ class PlayerType():
 
     def update(self):
         self.update_tendency()
+        self.update_skill()
+
         self.tendency -= self.tendency_modifier
         self.skill -= self.skill_modifier
         if self.tendency < 0:
@@ -52,6 +54,9 @@ class Explorer(PlayerType):
         if len(self.game.coins) < N_COINS:
             self.increase_tendency()
 
+    def update_skill(selfs):
+        pass
+
 class Killer(PlayerType):
     # Enemy kill event increases killer tendency
     def __init__(self, game):
@@ -60,6 +65,9 @@ class Killer(PlayerType):
     def update_tendency(self):
         if len(self.game.enemies) < N_ENEMIES:
             self.increase_tendency()
+
+    def update_skill(selfs):
+        pass
 
 class Scorer(PlayerType):
     # Both of the above (consecutively, order does not matter)
@@ -84,6 +92,9 @@ class Scorer(PlayerType):
 
         if self.coin_collected and len(self.game.coins) < N_COINS:
             self.enemy_killed = False
+
+    def update_skill(selfs):
+        pass
 
 
 class PlayerModel():

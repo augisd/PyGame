@@ -32,7 +32,7 @@ class State:
         pass
 
 
-class Explorer(Player, pg.sprite.Sprite):
+class ExplorerBot(Player, pg.sprite.Sprite):
     def __init__(self, game, x, y):
         pg.sprite.Sprite.__init__(self)
         Player.__init__(self, game, x, y)
