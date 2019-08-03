@@ -48,13 +48,13 @@ class ExplorerBot(Player, pg.sprite.Sprite):
         self.steps_taken = 0
 
     def explore(self):
-        if "C" in self.game.get_screen_objects():
+        if "C" in self.get_screen_objects():
             self.current_state = self.collect_coins
         # Move the player sprite around
         self.move_around()
 
     def collect_coins(self):
-        if "C" not in self.game.get_screen_objects():
+        if "C" not in self.get_screen_objects():
             self.current_state = self.explore
         # Move the player sprite towards the nearest coin
         go_to = self.get_closest_coin()
@@ -137,6 +137,23 @@ class ExplorerBot(Player, pg.sprite.Sprite):
 
         return self.game.screen.get_at((x, y)) == WALL_COL or \
                self.game.screen.get_at((x, y)) == ENEMY_COL
+
+    def get_screen_objects(self):
+        objects = []
+        for row in range(int(TILESIZE / 2), SCREEN_HEIGHT - TILESIZE, TILESIZE):
+            for col in range(int(TILESIZE / 2), SCREEN_WIDTH - TILESIZE, TILESIZE):
+                check = self.game.screen.get_at((col, row))
+                if check == SCREEN_COL:
+                    objects.append(" ")
+                if check == COIN_COL:
+                    objects.append("C")
+                if check == ENEMY_COL:
+                    objects.append("E")
+                if check == WALL_COL:
+                    objects.append("W")
+                if check == PLAYER_COL:
+                    objects.append("P")
+        return objects
 
     def update(self):
         # Pickup coin

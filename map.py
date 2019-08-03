@@ -173,6 +173,7 @@ class Map:
                     self.n_cells += 1
         return self.n_cells
 
+
 class Camera:
     def __init__(self, width, height):
         self.camera = pg.Rect(0, 0, width, height)

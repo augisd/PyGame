@@ -98,41 +98,4 @@ class Game:
         for y in range(0, SCREEN_HEIGHT, TILESIZE):
             pg.draw.line(self.screen, GRIDLINE_COL, (0, y), (SCREEN_WIDTH, y))
 
-    def get_screen_objects(self):
-        objects = []
-        for row in range(int(TILESIZE / 2), SCREEN_HEIGHT - TILESIZE, TILESIZE):
-            for col in range(int(TILESIZE / 2), SCREEN_WIDTH - TILESIZE, TILESIZE):
-                check = self.screen.get_at((col, row))
-                if check == SCREEN_COL:
-                    objects.append(" ")
-                if check == COIN_COL:
-                    objects.append("C")
-                if check == ENEMY_COL:
-                    objects.append("E")
-                if check == WALL_COL:
-                    objects.append("W")
-                if check == PLAYER_COL:
-                    objects.append("P")
-        return objects
-
-    def get_screen(self):
-        screen = [["#" for col in range(int(TILESIZE / 2), SCREEN_WIDTH, TILESIZE)]
-                  for row in range(int(TILESIZE / 2), SCREEN_HEIGHT, TILESIZE)]
-        for row in range(GRIDHEIGHT):
-            for col in range(GRIDWIDTH):
-
-                check = self.screen.get_at((col * TILESIZE + int(TILESIZE / 2),
-                                            row * TILESIZE + int(TILESIZE / 2)))
-                if check == SCREEN_COL:
-                    screen[row][col] = " "
-                if check == COIN_COL:
-                    screen[row][col] = "C"
-                if check == ENEMY_COL:
-                    screen[row][col] = "E"
-                if check == PLAYER_COL:
-                    screen[row][col] = "P"
-
-        return screen
-
-
 
