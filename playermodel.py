@@ -52,12 +52,14 @@ class Explorer(PlayerType):
         PlayerType.__init__(self, game)
         self.start_time = time.process_time()
         self.coins_collected = 0
+        self.total_coins = 0
+        self.coins_collected_old = 0
         self.n_coins_avg = 5
         self.avg_time_collection_size = 5
         self.end_time = time.process_time()
         self.time_elapsed = self.end_time - self.start_time
         self.collection_times_log = []
-        self.skill = 0
+        self.skill = 1
 
     def update_tendency(self):
         if len(self.game.coins) < N_COINS:
@@ -66,9 +68,18 @@ class Explorer(PlayerType):
     def update_skill(self):
         if len(self.game.coins) < N_COINS:
             self.coins_collected += 1
-            self.end_time = time.process_time()
-            self.time_elapsed = self.end_time - self.start_time
-            self.skill = self.coins_collected/self.time_elapsed
+            self.total_coins += 1
+
+        self.end_time = time.process_time()
+        self.time_elapsed = self.end_time - self.start_time
+        if self.time_elapsed > 2:
+            if self.coins_collected > self.coins_collected_old:
+                self.skill *= 2
+            else:
+                self.skill *= 0.5
+            self.coins_collected_old = self.coins_collected
+            self.coins_collected = 0
+            self.start_time = time.process_time()
 
     def update_skill2(self):
 

@@ -80,6 +80,8 @@ class Game:
                     self.player.shoot("RIGHT")
                 if event.key == pg.K_SPACE:
                     print(self.player_model.print_model())
+                if event.key == pg.K_x:
+                    self.map.spawn_sprite2(Coin)
 
     def render(self):
         self.screen.fill(SCREEN_COL)

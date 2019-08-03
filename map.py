@@ -133,6 +133,25 @@ class Map:
         else:
             pass
 
+    def find_spawn2(self, clearance=0, distance = 5):
+        locations = []
+        for row in range(-distance, distance + 1, 1):
+            for col in range(-distance, distance + 1, 1):
+                if self.grid[int(len(self.grid)/2) + row][int(len(self.grid)/2) + col] == ".":
+                    locations.append([int(len(self.grid)/2) + row, int(len(self.grid)/2) + col])
+        print(locations)
+        if locations:
+            return random.choice(locations)
+        else:
+            pass
+
+    def spawn_sprite2(self, sprite):
+        spawn = self.find_spawn2()
+        if spawn:
+            sprite(self.game, spawn[1], spawn[0])
+        else:
+            pass
+
     def square_empty(self, row, col, squaresize):
         for drow in range(squaresize):
             if self.grid[row + drow][col: col + squaresize] != ["."] * squaresize:
@@ -145,6 +164,14 @@ class Map:
             sprite(self.game, spawn[1], spawn[0])
         else:
             pass
+
+    def n_walkable_cells(self):
+        self.n_cells = 0
+        for row in self.map_layout:
+            for cell in row:
+                if cell == ".":
+                    self.n_cells += 1
+        return self.n_cells
 
 class Camera:
     def __init__(self, width, height):
