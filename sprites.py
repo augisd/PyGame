@@ -14,12 +14,11 @@ class Player(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.vx = 0
         self.vy = 0
+        print("Player: ", int(self.x / TILESIZE), int(self.y / TILESIZE))
 
     def update(self):
         # Pickup coin
         pg.sprite.spritecollide(self, self.game.coins, True)
-        #    self.game.player_model.explorer.increase_tendency()
-        #print(self.x, self.y)
         self.get_keys()
         self.x += self.vx * self.game.dt
         self.y += self.vy * self.game.dt
@@ -140,6 +139,7 @@ class Coin(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.rect.centerx = self.x + TILESIZE / 2
         self.rect.centery = self.y + TILESIZE / 2
+        print("Cooin: ", int(self.rect.x / TILESIZE), int(self.rect.y / TILESIZE))
 
 
 class Enemy(pg.sprite.Sprite):
@@ -156,3 +156,4 @@ class Enemy(pg.sprite.Sprite):
         self.rect.centery = self.y * TILESIZE + TILESIZE / 2
         self.speedx = 0
         self.speedy = 0
+        print("Enemy: ", int(self.rect.x / TILESIZE), int(self.rect.y / TILESIZE))

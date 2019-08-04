@@ -5,6 +5,7 @@ from AI import *
 from map import *
 from playermodel import *
 
+
 class Game:
     def __init__(self):
         self.running = True
@@ -22,17 +23,13 @@ class Game:
         pg.key.set_repeat(500, 100)
         self.playing = True
 
+
     def new_game(self):
         self.map = Map(self)
         self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
-        self.walls.draw(self.screen)
         self.camera = Camera(self.map.width, self.map.height)
-        for enemy in range(N_ENEMIES):
-            self.map.spawn_sprite(Enemy)
-        for coin in range(N_COINS):
-            self.map.spawn_sprite(Coin)
         self.player_model = PlayerModel(self)
 
     def run(self):
@@ -49,10 +46,11 @@ class Game:
         self.camera.update(self.player)
         # Update player model tendencies before respawning sprites
         self.player_model.update()
-        if len(self.coins) < N_COINS:
-           self.map.spawn_sprite(Coin)
-        if len(self.enemies) < N_ENEMIES:
-            self.map.spawn_sprite(Enemy)
+        self.map.update()
+        #if len(self.coins) < N_COINS:
+        #   self.map.spawn_sprite(Coin)
+        #if len(self.enemies) < N_ENEMIES:
+        #    self.map.spawn_sprite(Enemy)
 
     def events(self):
         for event in pg.event.get():
@@ -62,14 +60,8 @@ class Game:
                 self.running = False
             # Controls
             if event.type == pg.KEYDOWN:
-                # Testing
-                #if event.key == pg.K_SPACE:
-                #    newevent = pg.event.Event(pg.locals.KEYDOWN,
-                #                              unicode="a",
-                #                              key=pg.locals.K_a,
-                #                              mod=pg.locals.KMOD_NONE)
-                #    pg.event.post(newevent)
-                    # Shooting
+
+                # Shooting
                 if event.key == pg.K_w:
                     self.player.shoot("UP")
                 if event.key == pg.K_s:
@@ -78,10 +70,18 @@ class Game:
                     self.player.shoot("LEFT")
                 if event.key == pg.K_d:
                     self.player.shoot("RIGHT")
+                if event.key == pg.K_m:
+                    self.map.print_map(self.map.make_grid())
+                if event.key == pg.K_n:
+                    print(self.map.find_sprite_spawn())
+
+                # Testing
                 if event.key == pg.K_SPACE:
                     print(self.player_model.print_model())
                 if event.key == pg.K_x:
                     self.map.spawn_sprite2(Coin)
+                if event.key == pg.K_p:
+                    print(self.player.rect.x / TILESIZE, self.player.rect.y / TILESIZE)
 
     def render(self):
         self.screen.fill(SCREEN_COL)

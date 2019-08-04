@@ -9,20 +9,109 @@ class Map:
         self.grid = 0
         self.width = GRIDWIDTH * 2
         self.height = GRIDHEIGHT * 2
-        self.map_layout = 0
+        self.n_coins = N_COINS
+        self.n_enemies = N_ENEMIES
+        self.cluster_sizes = [1, 4, 9, 16, 25, 36]
+        self.sprite_spawn_distance = 5 #int(GRIDWIDTH / 2)
+        random.seed(6)
         self.create_map()
 
+    def update(self):
+        self.player_row = int(self.game.player.y / TILESIZE)
+        self.player_col = int(self.game.player.x / TILESIZE)
+
+        if len(self.game.coins) < N_COINS:
+            self.grid = self.make_grid()
+            self.spawn_sprite(Coin)
+
+        if len(self.game.enemies) < N_ENEMIES:
+            self.grid = self.make_grid()
+            self.spawn_sprite(Enemy)
 
     def create_map(self):
         walls = self.random_walk()
-        self.print_map(walls)
-        # self.fill_walls(walls)
-        walls_adjacent = self.adjacent(walls)
-        print()
-        self.print_map(walls_adjacent)
-        self.map_layout = walls_adjacent
-        self.grid = walls_adjacent
-        self.fill_walls(walls_adjacent)
+        #walls_adjacent = self.adjacent(walls)
+        #self.grid = walls_adjacent
+
+        # First create map layout (walls and walkable areas)
+        # including player sprite starting position
+        self.grid = walls
+
+        # Initial player position (to be used for spawning sprites
+        # around player):
+        self.player_row = int(MAPGRIDHEIGHT / 2)
+        self.player_col = int(MAPGRIDWIDTH / 2)
+
+        # Next, determine initial spawn locations for coin
+        # and enemy sprites
+        # First spawn the coins:
+        for coin in range(self.n_coins):
+            choices = self.find_sprite_spawn_locs(distance=self.sprite_spawn_distance)
+            loc = random.choice(choices)
+            self.grid[loc[0]][loc[1]] = "C"
+
+        # Then enemies:
+        for enemy in range(self.n_enemies):
+            choices = self.find_sprite_spawn_locs(distance=self.sprite_spawn_distance)
+            loc = random.choice(choices)
+            self.grid[loc[0]][loc[1]] = "E"
+
+        self.fill_map(self.grid)
+        #self.fill_walls(walls)
+        #self.print_map(walls)
+
+    def find_sprite_spawn_locs(self, clearance=1, distance=5, cluster_size=1):
+        locations = []
+        for row in range(-distance - clearance, distance + 1 - clearance, 1):
+            for col in range(-distance - clearance, distance + 1 - clearance, 1):
+
+                check_row = self.player_row + row
+                check_col = self.player_col + col
+
+                if self.square_empty(check_row, check_col, cluster_size + 2 * clearance):
+                    locations.append([check_row + clearance, check_col + clearance])
+
+        return locations
+
+    def square_empty(self, row, col, squaresize):
+        for drow in range(squaresize):
+            if self.grid[row + drow][col: col + squaresize] != [" "] * squaresize:
+                return False
+        return True
+
+    def fill_map(self, walls_grid):
+        for row in range(len(walls_grid)):
+            for col in range(len(walls_grid[0])):
+                if walls_grid[row][col] == "W":
+                    Wall(self.game, col, row)
+                elif walls_grid[row][col] == "C":
+                    Coin(self.game, col, row)
+                elif walls_grid[row][col] == "E":
+                    Enemy(self.game, col, row)
+
+    def spawn_sprite(self, sprite):
+        choices = self.find_sprite_spawn_locs(distance=self.sprite_spawn_distance)
+        loc = random.choice(choices)
+        if loc:
+            sprite(self.game, loc[1], loc[0])
+
+    def n_walkable_cells(self):
+        self.n_cells = 0
+        for row in self.grid:
+            for cell in row:
+                if cell == ".":
+                    self.n_cells += 1
+        return self.n_cells
+
+    def make_grid(self):
+        grid = [[" " for col in range(MAPGRIDWIDTH)] for row in range(MAPGRIDHEIGHT)]
+        for sprite in self.game.all_sprites:
+            name = sprite.__class__.__name__
+            y = int(sprite.rect.y / TILESIZE)
+            x = int(sprite.rect.x / TILESIZE)
+            grid[y][x] = name[0]
+
+        return grid
 
     def print_map(self, grid):
         for i in range(len(grid)):
@@ -30,18 +119,19 @@ class Map:
                 print(grid[i][j], end=" ")
             print()
 
-    def get_layout(self):
-        return self.map_layout
-
-    def random_walk(self, height=GRIDHEIGHT,
-                    width=GRIDWIDTH,
+    def random_walk(self, height=GRIDHEIGHT * 3,
+                    width=GRIDWIDTH * 3,
                     max_tunnels=MAX_TUNNELS,
                     max_length=MAX_LENGTH,
                     tunnel_width=TUNNEL_WIDTH):
         gap = int((tunnel_width - 1) / 2)
-        grid = [["#" for col in range(width)] for row in range(height)]
+        grid = [["W" for col in range(width)] for row in range(height)]
+
+        # Starting location of the walk. Also
+        # a starting location of player
         current_row = int(MAPGRIDHEIGHT / 2)
         current_col = int(MAPGRIDWIDTH / 2)
+
         directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
         random_direction = random.choice(directions)
         last_direction = [2, 2]
@@ -70,20 +160,17 @@ class Map:
                                     (current_col + dcol < 0 or current_col + dcol > width - 1)):
                                 break
                             else:
-                                grid[current_row + drow][current_col + dcol] = "."
+                                grid[current_row + drow][current_col + dcol] = " "
                     current_row += random_direction[0]
                     current_col += random_direction[1]
                     tunnel_length += 1
 
             last_direction = random_direction
             max_tunnels -= 1
-        return grid
 
-    def fill_walls(self, walls_grid):
-        for row in range(len(walls_grid)):
-            for col in range(len(walls_grid[0])):
-                if walls_grid[row][col] == "#":
-                    Wall(self.game, col, row)
+        # Put player starting position on the grid
+        grid[int(MAPGRIDHEIGHT / 2)][int(MAPGRIDWIDTH / 2)] = "P"
+        return grid
 
     def adjacent(self, grid):
         dims = len(grid)
@@ -119,60 +206,6 @@ class Map:
             for col in range(dims - 1, 2 * dims + 1, 1):
                 adjacent_rw[row][col] = adjacent[row][col]
         return adjacent_rw
-
-    # Iterate through map to find suitable locations based on needed clearance
-    # returns an array with random coordinates [row, col]
-    def find_spawn(self, clearance):
-        locations = []
-        for row in range(0, len(self.grid) - 2 * clearance, 1):
-            for col in range(0, len(self.grid[0]) - 2 * clearance, 1):
-                if self.square_empty(row, col, 1 + 2 * clearance):
-                    locations.append([row + clearance, col + clearance])
-        if locations:
-            return random.choice(locations)
-        else:
-            pass
-
-    def find_spawn2(self, clearance=0, distance = 5):
-        locations = []
-        for row in range(-distance, distance + 1, 1):
-            for col in range(-distance, distance + 1, 1):
-                if self.grid[int(len(self.grid)/2) + row][int(len(self.grid)/2) + col] == ".":
-                    locations.append([int(len(self.grid)/2) + row, int(len(self.grid)/2) + col])
-        print(locations)
-        if locations:
-            return random.choice(locations)
-        else:
-            pass
-
-    def spawn_sprite2(self, sprite):
-        spawn = self.find_spawn2()
-        if spawn:
-            sprite(self.game, spawn[1], spawn[0])
-        else:
-            pass
-
-    def square_empty(self, row, col, squaresize):
-        for drow in range(squaresize):
-            if self.grid[row + drow][col: col + squaresize] != ["."] * squaresize:
-                return False
-        return True
-
-    def spawn_sprite(self, sprite):
-        spawn = self.find_spawn(SPAWN_GAP)
-        if spawn:
-            sprite(self.game, spawn[1], spawn[0])
-        else:
-            pass
-
-    def n_walkable_cells(self):
-        self.n_cells = 0
-        for row in self.map_layout:
-            for cell in row:
-                if cell == ".":
-                    self.n_cells += 1
-        return self.n_cells
-
 
 class Camera:
     def __init__(self, width, height):
