@@ -58,6 +58,7 @@ class ExplorerBot(Player, pg.sprite.Sprite):
             self.current_state = self.explore
         # Move the player sprite towards the nearest coin
         go_to = self.get_closest_coin()
+        self.game.clock.tick(BOT_DELAY)
         self.go_to_coin(go_to)
 
     def get_closest_coin(self):
@@ -81,7 +82,7 @@ class ExplorerBot(Player, pg.sprite.Sprite):
         start_x = int(self.x / TILESIZE)
         start_y = int(self.y / TILESIZE)
         start = (start_y, start_x)
-        grid = self.game.map.map_layout
+        grid = self.game.map.grid
         # (row, col)
         path = astar(grid, start, target)
         if len(path) == 1:
@@ -140,24 +141,19 @@ class ExplorerBot(Player, pg.sprite.Sprite):
 
     def get_screen_objects(self):
         objects = []
-        for row in range(int(TILESIZE / 2), SCREEN_HEIGHT - TILESIZE, TILESIZE):
-            for col in range(int(TILESIZE / 2), SCREEN_WIDTH - TILESIZE, TILESIZE):
-                check = self.game.screen.get_at((col, row))
-                if check == SCREEN_COL:
-                    objects.append(" ")
-                if check == COIN_COL:
+        for row in self.game.map.grid:
+            for col in row:
+                if col == "C":
                     objects.append("C")
-                if check == ENEMY_COL:
+                if col == "E":
                     objects.append("E")
-                if check == WALL_COL:
-                    objects.append("W")
-                if check == PLAYER_COL:
-                    objects.append("P")
         return objects
 
     def update(self):
         # Pickup coin
-        pg.sprite.spritecollide(self, self.game.coins, True)
+        self.coin_picked_up = False
+        if pg.sprite.spritecollide(self, self.game.coins, True):
+            self.coin_picked_up = True
         # print(self.vx, self.vy)
         #self.get_keys()
         self.vx, self.vy = 0, 0

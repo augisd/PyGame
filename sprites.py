@@ -14,11 +14,16 @@ class Player(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.vx = 0
         self.vy = 0
-        print("Player: ", int(self.x / TILESIZE), int(self.y / TILESIZE))
+
+        self.coin_picked_up = False
+        self.bullets_fired = 0
 
     def update(self):
-        # Pickup coin
-        pg.sprite.spritecollide(self, self.game.coins, True)
+        # Pickup coin (Bool statements for player model tendency)
+        self.coin_picked_up = False
+        if pg.sprite.spritecollide(self, self.game.coins, True):
+            self.coin_picked_up = True
+
         self.get_keys()
         self.x += self.vx * self.game.dt
         self.y += self.vy * self.game.dt
@@ -77,6 +82,7 @@ class Player(pg.sprite.Sprite):
                 self.rect.y = self.y
 
     def shoot(self, dir):
+        self.bullets_fired += 1
         bullet = Bullet(self.game, self.rect.centerx, self.rect.centery)
         if dir == "LEFT":
             bullet.speedx = -5
@@ -131,6 +137,7 @@ class Bullet(pg.sprite.Sprite):
 class Coin(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.coins
+        self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
         self.image = pg.Surface((TILESIZE / 2, TILESIZE / 2))
         self.image.fill(COIN_COL)
@@ -139,7 +146,6 @@ class Coin(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.rect.centerx = self.x + TILESIZE / 2
         self.rect.centery = self.y + TILESIZE / 2
-        print("Cooin: ", int(self.rect.x / TILESIZE), int(self.rect.y / TILESIZE))
 
 
 class Enemy(pg.sprite.Sprite):
@@ -156,4 +162,3 @@ class Enemy(pg.sprite.Sprite):
         self.rect.centery = self.y * TILESIZE + TILESIZE / 2
         self.speedx = 0
         self.speedy = 0
-        print("Enemy: ", int(self.rect.x / TILESIZE), int(self.rect.y / TILESIZE))

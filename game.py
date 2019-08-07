@@ -73,7 +73,9 @@ class Game:
                 if event.key == pg.K_m:
                     self.map.print_map(self.map.make_grid())
                 if event.key == pg.K_n:
-                    print(self.map.find_sprite_spawn())
+                    print(self.map.player_distance_to_coins)
+                if event.key == pg.K_t:
+                    print(self.player_model.explorer.tendency_timer)
 
                 # Testing
                 if event.key == pg.K_SPACE:

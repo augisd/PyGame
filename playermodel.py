@@ -9,15 +9,18 @@ class PlayerType():
 
     def __init__(self, game):
         self.game = game
-        self.tendency = 0
-        self.skill = 0
-        self.tendency_modifier = 0.01
+        self.tendency = 1
+        self.skill = 1
+        self.tendency_decrement = -0.5
         self.skill_modifier = 0.01
-        self.tendency_increment = 5
+        self.tendency_increment = 1
         self.skill_increment = 5
 
     def increase_tendency(self):
         self.tendency += self.tendency_increment
+
+    def decrease_tendency(self):
+        self.tendency += self.tendency_decrement
 
     def increase_skill(self):
         self.skill += self.skill_increment
@@ -38,82 +41,112 @@ class PlayerType():
         self.update_tendency()
         self.update_skill()
 
-        self.tendency -= self.tendency_modifier
         #self.skill -= self.skill_modifier
         if self.tendency < 0:
             self.tendency = 0
         if self.skill < 0:
             self.skill = 0
 
+        if self.tendency > 100:
+            self.tendency = 100
+
+
 
 class Explorer(PlayerType):
     # Coin pickup event increases tendency
     def __init__(self, game):
         PlayerType.__init__(self, game)
-        self.start_time = time.process_time()
+        self.start_time = time.perf_counter()
         self.coins_collected = 0
         self.total_coins = 0
-        self.coins_collected_old = 0
-        self.n_coins_avg = 5
-        self.avg_time_collection_size = 5
-        self.end_time = time.process_time()
+        self.end_time = time.perf_counter()
         self.time_elapsed = self.end_time - self.start_time
-        self.collection_times_log = []
         self.skill = 1
+        self.avg_skill = []
+        self.all_times = []
+
+        self.tendency_timer_start = time.perf_counter()
+        self.tendency_timer_end = 0
+        self.tendency_timer = 0
 
     def update_tendency(self):
-        if len(self.game.coins) < N_COINS:
+
+        if len(self.game.coins) == 0:
+            self.game.map.n_coins += 1
+
+        self.tendency_timer_end = time.perf_counter()
+        self.tendency_timer = self.tendency_timer_end - self.tendency_timer_start
+
+        if self.game.player.coin_picked_up:
+            self.tendency_timer_start = time.perf_counter()
             self.increase_tendency()
 
+        if self.tendency_timer > 5:
+            self.decrease_tendency()
+            self.tendency_timer_start = time.perf_counter()
+
+
     def update_skill(self):
-        if len(self.game.coins) < N_COINS:
+
+        if self.game.player.coin_picked_up:
+
             self.coins_collected += 1
             self.total_coins += 1
 
-        self.end_time = time.process_time()
-        self.time_elapsed = self.end_time - self.start_time
-        if self.time_elapsed > 2:
-            if self.coins_collected > self.coins_collected_old:
-                self.skill *= 2
-            else:
-                self.skill *= 0.5
-            self.coins_collected_old = self.coins_collected
+        if len(self.game.coins) == 0:
+
+            self.end_time = time.perf_counter()
+            self.time_elapsed = round(self.end_time - self.start_time, 2)
+            self.all_times.append(self.time_elapsed)
+
+            if len(self.all_times) > 10:
+                self.all_times = self.all_times[1:]
+
+            self.avg_time = round(sum(self.all_times) / len(self.all_times), 2)
+
+            self.skill = round(self.game.map.sprite_spawn_distance / self.avg_time, 2)
             self.coins_collected = 0
-            self.start_time = time.process_time()
-
-    def update_skill2(self):
-
-        if len(self.game.coins) < N_COINS and self.coins_collected == self.n_coins_avg - 1:
-            self.end_time = time.process_time()
-            self.time_elapsed = self.end_time - self.start_time
-            self.start_time = time.process_time()
-
-            self.collection_times_log.append(self.time_elapsed)
-            if len(self.collection_times_log) > self.avg_time_collection_size:
-                self.collection_times_log = self.collection_times_log[1:]
-            self.skill = self.n_coins_avg  / (sum(self.collection_times_log) / len(self.collection_times_log))
-            self.coins_collected = 0
-
-            print(self.collection_times_log)
-
-        elif len(self.game.coins) < N_COINS and self.coins_collected < self.n_coins_avg:
-            self.coins_collected += 1
-
-        #print(self.time_elapsed)
-
-
+            self.start_time = time.perf_counter()
 
 class Killer(PlayerType):
     # Enemy kill event increases killer tendency
     def __init__(self, game):
         PlayerType.__init__(self, game)
+        self.game = game
+        self.last_n_enemies_killed = 0
+        self.total_enemies_killed = 0
+        self.kills_per_minute = 0
+        self.bullets_fired = self.game.player.bullets_fired
+        self.accuracy = 0
+        self.start_killing_time = time.perf_counter()
+        self.skill_update_time = 10
 
     def update_tendency(self):
-        if len(self.game.enemies) < N_ENEMIES:
-            self.increase_tendency()
 
-    def update_skill(selfs):
-        pass
+        if len(self.game.enemies) < N_ENEMIES:
+
+            self.total_enemies_killed += 1
+            self.last_n_enemies_killed += 1
+
+            if self.total_enemies_killed % 5 == 0 and self.total_enemies_killed != 0:
+                self.increase_tendency()
+
+    def update_skill(self):
+        self.bullets_fired = self.game.player.bullets_fired
+
+        if self.bullets_fired > 0:
+            self.accuracy = round(self.total_enemies_killed / self.bullets_fired, 2)
+        #self.skill = self.accuracy * 10
+
+        self.end_killing_time = time.perf_counter()
+        self.killing_time = self.end_killing_time - self.start_killing_time
+
+        if self.killing_time > self.skill_update_time:
+            self.kills_per_minute = round((self.last_n_enemies_killed / self.skill_update_time) * 60, 2)
+            self.start_killing_time = time.perf_counter()
+
+        self.skill = self.kills_per_minute * self.accuracy / self.game.map.n_enemies
+
 
 class Scorer(PlayerType):
     # Both of the above (consecutively, order does not matter)

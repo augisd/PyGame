@@ -12,17 +12,18 @@ class Map:
         self.n_coins = N_COINS
         self.n_enemies = N_ENEMIES
         self.cluster_sizes = [1, 4, 9, 16, 25, 36]
-        self.sprite_spawn_distance = 5 #int(GRIDWIDTH / 2)
+        self.sprite_spawn_distance = SPAWN_DIST #int(GRIDWIDTH / 2)
         random.seed(6)
         self.create_map()
 
     def update(self):
-        self.player_row = int(self.game.player.y / TILESIZE)
-        self.player_col = int(self.game.player.x / TILESIZE)
-
-        if len(self.game.coins) < N_COINS:
-            self.grid = self.make_grid()
-            self.spawn_sprite(Coin)
+        #self.player_row = int(self.game.player.y / TILESIZE)
+        #self.player_col = int(self.game.player.x / TILESIZE)
+        if len(self.game.coins) == 0:
+            #random.seed(COIN_SEED)
+            for coin in range(self.n_coins):
+                self.grid = self.make_grid()
+                self.spawn_sprite(Coin)
 
         if len(self.game.enemies) < N_ENEMIES:
             self.grid = self.make_grid()
@@ -50,6 +51,7 @@ class Map:
             loc = random.choice(choices)
             self.grid[loc[0]][loc[1]] = "C"
 
+
         # Then enemies:
         for enemy in range(self.n_enemies):
             choices = self.find_sprite_spawn_locs(distance=self.sprite_spawn_distance)
@@ -57,8 +59,6 @@ class Map:
             self.grid[loc[0]][loc[1]] = "E"
 
         self.fill_map(self.grid)
-        #self.fill_walls(walls)
-        #self.print_map(walls)
 
     def find_sprite_spawn_locs(self, clearance=1, distance=5, cluster_size=1):
         locations = []
@@ -89,11 +89,19 @@ class Map:
                 elif walls_grid[row][col] == "E":
                     Enemy(self.game, col, row)
 
-    def spawn_sprite(self, sprite):
-        choices = self.find_sprite_spawn_locs(distance=self.sprite_spawn_distance)
-        loc = random.choice(choices)
-        if loc:
-            sprite(self.game, loc[1], loc[0])
+    def spawn_sprite(self, sprite, cluster_size= 1):
+
+        choices = self.find_sprite_spawn_locs(distance=self.sprite_spawn_distance, cluster_size=cluster_size)
+        if choices:
+            loc = random.choice(choices)
+            if cluster_size == 1:
+                sprite(self.game, loc[1], loc[0])
+            if cluster_size == 4:
+                for row in range(cluster_size):
+                    for col in range(cluster_size):
+                        sprite(self.game, loc[1] + col, loc[0] + row)
+        else:
+            pass
 
     def n_walkable_cells(self):
         self.n_cells = 0
