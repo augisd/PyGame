@@ -30,7 +30,7 @@ class Game:
         self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
-        self.camera = Camera(self.map.width, self.map.height)
+        self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player_model = PlayerModel(self)
 
     def run(self):
@@ -73,10 +73,8 @@ class Game:
                     self.player.shoot("RIGHT")
                 if event.key == pg.K_m:
                     self.map.print_map(self.map.make_grid())
-                if event.key == pg.K_n:
-                    print(self.map.player_distance_to_coins)
                 if event.key == pg.K_t:
-                    print(self.player_model.explorer.tendency_timer)
+                    self.map.print_map(self.map.grid_explored)
 
                 # Testing
                 if event.key == pg.K_SPACE:
@@ -84,7 +82,7 @@ class Game:
                 if event.key == pg.K_x:
                     self.map.spawn_sprite2(Coin)
                 if event.key == pg.K_p:
-                    print(self.player.rect.x / TILESIZE, self.player.rect.y / TILESIZE)
+                    print(self.map.percentage_map_explored)
 
     def render(self):
         self.screen.fill(SCREEN_COL)

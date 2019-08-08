@@ -7,6 +7,10 @@ class Map:
     def __init__(self, game):
         self.game = game
         self.grid = 0
+        self.grid_explored = 0
+        self.cells_explored = 0
+        self.cells_unexplored = 0
+        self.percentage_map_explored = 0
         self.width = GRIDWIDTH * 2
         self.height = GRIDHEIGHT * 2
         self.n_coins = N_COINS
@@ -28,6 +32,12 @@ class Map:
         if len(self.game.enemies) < N_ENEMIES:
             self.grid = self.make_grid()
             self.spawn_sprite(Enemy)
+
+        # Check where in the grid the player has been
+        # and update percentage of grid explored
+        self.n_cells_explored()
+        #self.cells_unexplored = self.cells_unexplored - self.cells_explored
+        self.percentage_map_explored = self.cells_explored / self.cells_unexplored
 
     def create_map(self):
         walls = self.random_walk()
@@ -57,6 +67,13 @@ class Map:
             choices = self.find_sprite_spawn_locs(distance=self.sprite_spawn_distance)
             loc = random.choice(choices)
             self.grid[loc[0]][loc[1]] = "E"
+
+        # Make a copy of the grid for exploration purpose
+        self.grid_explored = self.grid
+
+        # Initialize number of empty cells for map exploration skill
+        self.cells_unexplored = self.n_cells_unexplored()
+        print(self.cells_unexplored)
 
         self.fill_map(self.grid)
 
@@ -103,13 +120,37 @@ class Map:
         else:
             pass
 
-    def n_walkable_cells(self):
+    #print(self.player.rect.x / TILESIZE - ((SCREEN_WIDTH / 2) / TILESIZE), self.player.rect.x / TILESIZE + ((SCREEN_WIDTH / 2) / TILESIZE))
+
+    def n_cells_unexplored(self):
         self.n_cells = 0
         for row in self.grid:
             for cell in row:
-                if cell == ".":
+                if cell == " ":
                     self.n_cells += 1
         return self.n_cells
+
+    def n_cells_explored(self):
+
+        x_lower = int(self.game.player.rect.x / TILESIZE - ((SCREEN_WIDTH / 2) / TILESIZE))
+        x_upper = int(self.game.player.rect.x / TILESIZE + ((SCREEN_WIDTH / 2) / TILESIZE))
+        y_lower = int(self.game.player.rect.y / TILESIZE - ((SCREEN_HEIGHT / 2) / TILESIZE))
+        y_upper = int(self.game.player.rect.y / TILESIZE + ((SCREEN_HEIGHT / 2) / TILESIZE))
+
+        if x_lower < 0:
+            x_lower = 0
+        if y_lower < 0:
+            y_lower = 0
+        if x_upper > MAPGRIDWIDTH:
+            x_upper = MAPGRIDWIDTH
+        if y_upper > MAPGRIDHEIGHT:
+            y_upper = MAPGRIDHEIGHT
+
+        for row in range(y_lower, y_upper, 1):
+            for col in range(x_lower, x_upper, 1):
+                if self.grid_explored[row][col] == " ":
+                    self.grid_explored[row][col] = "."
+                    self.cells_explored += 1
 
     def make_grid(self):
         grid = [[" " for col in range(MAPGRIDWIDTH)] for row in range(MAPGRIDHEIGHT)]

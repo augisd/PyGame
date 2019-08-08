@@ -215,27 +215,68 @@ class Enemy(pg.sprite.Sprite):
 
     def shoot_back(self):
 
+        # Move around (previous state)
+        self.move_around()
+
+        # Plus if player in sight - shoot
         if self.rect.x == self.game.player.rect.x:
 
-            bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
-
-            if self.rect.y > self.game.player.rect.y:
-                bullet.speedy = -5
-            else:
-                bullet.speedy = 5
+            self.shoot_in_y_direction()
 
         elif self.rect.y == self.game.player.rect.y:
 
-            bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
-
-            if self.rect.x > self.game.player.rect.x:
-                bullet.speedx = -5
-            else:
-                bullet.speedx = 5
+            self.shoot_in_x_direction()
 
         else:
             pass
 
+    def shoot_in_x_direction(self):
+        bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
+
+        if self.rect.x > self.game.player.rect.x:
+            bullet.speedx = -5
+        else:
+            bullet.speedx = 5
+
+    def shoot_in_y_direction(self):
+        bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
+
+        if self.rect.y > self.game.player.rect.y:
+            bullet.speedy = -5
+        else:
+            bullet.speedy = 5
 
     def seek_player(self):
-        pass
+
+        # Check which direction needs less moves (x or y) to put player in sight
+        x = int(abs(self.game.player.rect.x - self.rect.x))
+        y = int(abs(self.game.player.rect.y - self.rect.y))
+
+        if x < y:
+            direction = "x"
+        if x > y:
+            direction = "y"
+        if x == y:
+            direction = random.choice(["x", "y"])
+
+        if direction == "x":
+
+            if self.game.player.rect.x > self.rect.x:
+                self.rect.x -= TILESIZE
+
+            elif self.game.player.rect.x < self.rect.x:
+                self.rect.x += TILESIZE
+
+            else:
+                self.shoot_in_y_direction()
+
+        if direction == "y":
+
+            if self.game.player.rect.y > self.rect.y:
+                self.rect.y += TILESIZE
+
+            elif self.game.player.rect.y < self.rect.y:
+                self.rect.y -= TILESIZE
+
+            else:
+                self.shoot_in_x_direction()

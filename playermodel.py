@@ -69,6 +69,8 @@ class Explorer(PlayerType):
         self.tendency_timer_end = 0
         self.tendency_timer = 0
 
+        self.percentage_map_explored = self.game.map.percentage_map_explored
+
     def update_tendency(self):
 
         if len(self.game.coins) == 0:
@@ -88,25 +90,20 @@ class Explorer(PlayerType):
 
     def update_skill(self):
 
+        # 1. Number of coins collected
         if self.game.player.coin_picked_up:
 
             self.coins_collected += 1
             self.total_coins += 1
 
-        if len(self.game.coins) == 0:
+        # 2. Percentage of Map explored
+        self.percentage_map_explored = self.game.map.percentage_map_explored
 
-            self.end_time = time.perf_counter()
-            self.time_elapsed = round(self.end_time - self.start_time, 2)
-            self.all_times.append(self.time_elapsed)
+        # Get time played
+        self.end_time = time.perf_counter()
+        self.time_elapsed = self.end_time - self.start_time
 
-            if len(self.all_times) > 10:
-                self.all_times = self.all_times[1:]
-
-            self.avg_time = round(sum(self.all_times) / len(self.all_times), 2)
-
-            self.skill = round(self.game.map.sprite_spawn_distance / self.avg_time, 2)
-            self.coins_collected = 0
-            self.start_time = time.perf_counter()
+        self.skill = 100 * self.coins_collected * self.percentage_map_explored / self.time_elapsed
 
 class Killer(PlayerType):
     # Enemy kill event increases killer tendency
