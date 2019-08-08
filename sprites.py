@@ -1,6 +1,7 @@
 import pygame as pg
 from settings import *
 import random
+import time
 
 class Player(pg.sprite.Sprite):
     def __init__(self, game, x, y):
@@ -109,12 +110,22 @@ class Wall(pg.sprite.Sprite):
 
 
 class Bullet(pg.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.bullets
+    def __init__(self, game, x, y, fired_by_player=True):
+        self.fired_by_player = fired_by_player
+
+        if self.fired_by_player:
+            self.groups = game.all_sprites, game.bullets
+        elif not self.fired_by_player:
+            self.groups = game.all_sprites, game.enemy_bullets
+
         self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
         self.image = pg.Surface((3, 3))
-        self.image.fill(BULLET_COL)
+
+        if self.fired_by_player:
+            self.image.fill(BULLET_COL)
+        else:
+            self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = y
@@ -128,8 +139,12 @@ class Bullet(pg.sprite.Sprite):
             self.rect.bottom > MAP_HEIGHT or
             pg.sprite.spritecollideany(self, self.game.walls)):
             self.kill()
-        # Bullet hits enemy
-        pg.sprite.groupcollide(self.game.bullets, self.game.enemies, True, True)
+        # Bullet collision ( fired by player or enemy )
+        if self.fired_by_player:
+            pg.sprite.groupcollide(self.game.bullets, self.game.enemies, True, True)
+        elif not self.fired_by_player:
+            pg.sprite.spritecollide(self.game.player, self.game.enemy_bullets, True)
+
         self.rect.centerx += self.speedx
         self.rect.centery += self.speedy
 
@@ -151,6 +166,7 @@ class Coin(pg.sprite.Sprite):
 class Enemy(pg.sprite.Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.enemies
+        self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(ENEMY_COL)
@@ -162,3 +178,64 @@ class Enemy(pg.sprite.Sprite):
         self.rect.centery = self.y * TILESIZE + TILESIZE / 2
         self.speedx = 0
         self.speedy = 0
+
+        self.action_timer_start = time.perf_counter()
+        self.action_update_time = 1
+
+        self.states = {
+            0 : self.stationary,
+            1 : self.move_around,
+            2 : self.shoot_back,
+            3 : self.seek_player
+        }
+
+        self.state = 0
+
+    def update(self):
+        # Check update time
+        self.action_timer_end = time.perf_counter()
+        self.action_timer = self.action_timer_end - self.action_timer_start
+
+        if self.action_timer > self.action_update_time:
+
+            self.states.get(self.state)()
+            self.action_timer_start = time.perf_counter()
+
+    def stationary(self):
+        pass
+
+    def move_around(self):
+
+        # NEED TO FIX MOVING INTO THE WALLS HERE
+
+        move_to = random.choice([[1, 0], [0, 1], [-1, 0], [0, -1]])
+
+        self.rect.x += move_to[0] * TILESIZE
+        self.rect.y += move_to[1] * TILESIZE
+
+    def shoot_back(self):
+
+        if self.rect.x == self.game.player.rect.x:
+
+            bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
+
+            if self.rect.y > self.game.player.rect.y:
+                bullet.speedy = -5
+            else:
+                bullet.speedy = 5
+
+        elif self.rect.y == self.game.player.rect.y:
+
+            bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
+
+            if self.rect.x > self.game.player.rect.x:
+                bullet.speedx = -5
+            else:
+                bullet.speedx = 5
+
+        else:
+            pass
+
+
+    def seek_player(self):
+        pass

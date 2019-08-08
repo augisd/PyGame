@@ -147,6 +147,12 @@ class Killer(PlayerType):
 
         self.skill = self.kills_per_minute * self.accuracy / self.game.map.n_enemies
 
+        for enemy in self.game.enemies:
+            new_state = self.skill // 10
+            if new_state > 3:
+                new_state = 3
+            enemy.state = new_state
+
 
 class Scorer(PlayerType):
     # Both of the above (consecutively, order does not matter)

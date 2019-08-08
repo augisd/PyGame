@@ -16,6 +16,7 @@ class Game:
         self.all_sprites = pg.sprite.Group()
         self.walls = pg.sprite.Group()
         self.bullets = pg.sprite.Group()
+        self.enemy_bullets = pg.sprite.Group()
         self.coins = pg.sprite.Group()
         self.enemies = pg.sprite.Group()
 
