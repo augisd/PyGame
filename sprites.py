@@ -15,6 +15,8 @@ class Player(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.vx = 0
         self.vy = 0
+        self.coins_collected = 0
+        self.enemies_killed = 0
 
         self.coin_picked_up = False
         self.bullets_fired = 0
@@ -23,7 +25,9 @@ class Player(pg.sprite.Sprite):
         # Pickup coin (Bool statements for player model tendency)
         self.coin_picked_up = False
         if pg.sprite.spritecollide(self, self.game.coins, True):
+            self.coins_collected += 1
             self.coin_picked_up = True
+            print(self.coins_collected)
 
         self.get_keys()
         self.x += self.vx * self.game.dt
@@ -141,7 +145,8 @@ class Bullet(pg.sprite.Sprite):
             self.kill()
         # Bullet collision ( fired by player or enemy )
         if self.fired_by_player:
-            pg.sprite.groupcollide(self.game.bullets, self.game.enemies, True, True)
+            if pg.sprite.groupcollide(self.game.bullets, self.game.enemies, True, True):
+                self.game.player.enemies_killed += 1
         elif not self.fired_by_player:
             pg.sprite.spritecollide(self.game.player, self.game.enemy_bullets, True)
 

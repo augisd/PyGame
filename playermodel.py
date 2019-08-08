@@ -73,8 +73,10 @@ class Explorer(PlayerType):
 
     def update_tendency(self):
 
-        if len(self.game.coins) == 0:
-            self.game.map.n_coins += 1
+        self.coins_collected = self.game.player.coins_collected
+
+        if self.coins_collected >= 10:
+            self.game.map.n_coins = self.coins_collected // 10 + N_COINS
 
         self.tendency_timer_end = time.perf_counter()
         self.tendency_timer = self.tendency_timer_end - self.tendency_timer_start
@@ -90,11 +92,12 @@ class Explorer(PlayerType):
 
     def update_skill(self):
 
-        # 1. Number of coins collected
-        if self.game.player.coin_picked_up:
+        # Scale spawn distance with skill
+        if self.skill > 10:
+            self.game.map.coin_spawn_distance = int(self.skill) * 3 // 10 + SPAWN_DIST_COINS
 
-            self.coins_collected += 1
-            self.total_coins += 1
+        # 1. Number of coins collected
+        self.coins_collected = self.game.player.coins_collected
 
         # 2. Percentage of Map explored
         self.percentage_map_explored = self.game.map.percentage_map_explored
@@ -111,7 +114,7 @@ class Killer(PlayerType):
         PlayerType.__init__(self, game)
         self.game = game
         self.last_n_enemies_killed = 0
-        self.total_enemies_killed = 0
+        self.enemies_killed = self.game.player.enemies_killed
         self.kills_per_minute = 0
         self.bullets_fired = self.game.player.bullets_fired
         self.accuracy = 0
@@ -120,29 +123,30 @@ class Killer(PlayerType):
 
     def update_tendency(self):
 
-        if len(self.game.enemies) < N_ENEMIES:
+        self.enemies_killed = self.game.player.enemies_killed
 
-            self.total_enemies_killed += 1
-            self.last_n_enemies_killed += 1
+        if self.enemies_killed >= 10:
 
-            if self.total_enemies_killed % 5 == 0 and self.total_enemies_killed != 0:
+            if self.enemies_killed % 5 == 0 and self.enemies_killed != 0:
                 self.increase_tendency()
+
+            self.game.map.n_enemies = self.enemies_killed // 10 + N_ENEMIES
 
     def update_skill(self):
         self.bullets_fired = self.game.player.bullets_fired
+        print(self.kills_per_minute)
+        if self.skill > 10:
+            self.game.map.enemy_spawn_distance = int(self.skill) * 3 // 10 + SPAWN_DIST_ENEMIES
 
         if self.bullets_fired > 0:
-            self.accuracy = round(self.total_enemies_killed / self.bullets_fired, 2)
-        #self.skill = self.accuracy * 10
+            self.accuracy = round(self.enemies_killed / self.bullets_fired, 2)
 
         self.end_killing_time = time.perf_counter()
         self.killing_time = self.end_killing_time - self.start_killing_time
 
-        if self.killing_time > self.skill_update_time:
-            self.kills_per_minute = round((self.last_n_enemies_killed / self.skill_update_time) * 60, 2)
-            self.start_killing_time = time.perf_counter()
+        self.kills_per_minute = self.enemies_killed * 60 / self.killing_time
 
-        self.skill = self.kills_per_minute * self.accuracy / self.game.map.n_enemies
+        self.skill = self.kills_per_minute * self.accuracy 
 
         for enemy in self.game.enemies:
             new_state = self.skill // 10
