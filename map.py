@@ -18,10 +18,11 @@ class Map:
         self.cluster_sizes = [1, 4, 9, 16, 25, 36]
         self.coin_spawn_distance = SPAWN_DIST_COINS
         self.enemy_spawn_distance = SPAWN_DIST_ENEMIES
-        random.seed(6)
+        random.seed(11)
         self.create_map()
 
     def update(self):
+        self.grid = self.make_grid()
         #self.player_row = int(self.game.player.y / TILESIZE)
         #self.player_col = int(self.game.player.x / TILESIZE)
         if len(self.game.coins) == 0:
@@ -75,7 +76,6 @@ class Map:
 
         # Initialize number of empty cells for map exploration skill
         self.cells_unexplored = self.n_cells_unexplored()
-        print(self.cells_unexplored)
 
         self.fill_map(self.grid)
 

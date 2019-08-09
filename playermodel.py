@@ -134,9 +134,8 @@ class Killer(PlayerType):
 
     def update_skill(self):
         self.bullets_fired = self.game.player.bullets_fired
-        print(self.kills_per_minute)
         if self.skill > 10:
-            self.game.map.enemy_spawn_distance = int(self.skill) * 3 // 10 + SPAWN_DIST_ENEMIES
+            self.game.map.enemy_spawn_distance = int(self.skill) // 10 + SPAWN_DIST_ENEMIES
 
         if self.bullets_fired > 0:
             self.accuracy = round(self.enemies_killed / self.bullets_fired, 2)

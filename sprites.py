@@ -141,7 +141,11 @@ class Bullet(pg.sprite.Sprite):
             self.rect.left < 0 or
             self.rect.top < 0 or
             self.rect.bottom > MAP_HEIGHT or
-            pg.sprite.spritecollideany(self, self.game.walls)):
+            pg.sprite.spritecollideany(self, self.game.walls) or
+            self.rect.right > self.game.player.rect.centerx + SCREEN_WIDTH / 2 or
+            self.rect.left < self.game.player.rect.centerx - SCREEN_WIDTH / 2 or
+            self.rect.top > self.game.player.rect.centery + SCREEN_HEIGHT / 2 or
+            self.rect.bottom < self.game.player.rect.centery - SCREEN_HEIGHT / 2):
             self.kill()
         # Bullet collision ( fired by player or enemy )
         if self.fired_by_player:
@@ -215,8 +219,11 @@ class Enemy(pg.sprite.Sprite):
 
         move_to = random.choice([[1, 0], [0, 1], [-1, 0], [0, -1]])
 
-        self.rect.x += move_to[0] * TILESIZE
-        self.rect.y += move_to[1] * TILESIZE
+        self.x += move_to[0]
+        self.y += move_to[1]
+
+        self.rect.x = self.x * TILESIZE
+        self.rect.y = self.y * TILESIZE
 
     def shoot_back(self):
 
