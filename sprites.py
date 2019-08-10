@@ -8,7 +8,7 @@ class Player(pg.sprite.Sprite):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = pg.Surface((TILESIZE * 2, TILESIZE * 2))
         self.image.fill((PLAYER_COL))
         self.rect = self.image.get_rect()
         self.x = x * TILESIZE
@@ -42,9 +42,11 @@ class Player(pg.sprite.Sprite):
         if self.y > MAP_HEIGHT:
             self.y = MAP_HEIGHT
 
-        self.rect.x = int(self.x / TILESIZE) * TILESIZE
+        #self.rect.x = int(self.x / TILESIZE) * TILESIZE
+        self.rect.x = self.x
         self.collide_with_walls("x")
-        self.rect.y = int(self.y / TILESIZE) * TILESIZE
+        #self.rect.y = int(self.y / TILESIZE) * TILESIZE
+        self.rect.y = self.y
         self.collide_with_walls("y")
 
     def get_keys(self):
@@ -177,7 +179,7 @@ class Enemy(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.enemies
         self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
-        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = pg.Surface((TILESIZE * 2, TILESIZE * 2))
         self.image.fill(ENEMY_COL)
         self.rect = self.image.get_rect()
         self.hp = 10

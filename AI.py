@@ -24,7 +24,6 @@ class BaseBot(Player, pg.sprite.Sprite):
 
     def move_around(self):
         # Re-implement Random Walk
-
         if self.steps_taken == self.steps_to_take:
             self.last_direction = self.random_direction
             self.random_direction = random.choice(self.directions)
@@ -91,12 +90,25 @@ class BaseBot(Player, pg.sprite.Sprite):
 
     def get_screen_objects(self):
         objects = []
-        for row in self.game.map.grid:
+
+        screen_top_left_x = int(self.rect.x / TILESIZE) - int(GRIDWIDTH / 2)
+        screen_top_left_y = int(self.rect.y / TILESIZE) - int(GRIDHEIGHT / 2)
+        screen_grid = self.game.map.grid[screen_top_left_y:(screen_top_left_y + GRIDHEIGHT)][screen_top_left_x:(screen_top_left_x + GRIDWIDTH)]
+
+        #for row in range(screen_top_left_y, screen_top_left_y + GRIDHEIGHT, 1):
+        #    for col in range(screen_top_left_x, screen_top_left_x + GRIDWIDTH, 1):
+        #        if self.game.map.grid[row][col] == "C":
+        #            objects.append("C")
+        #        elif self.game.map.grid[row][col] == "E":
+        #            objects.append("E")
+
+        for row in screen_grid:
             for col in row:
                 if col == "C":
                     objects.append("C")
                 if col == "E":
                     objects.append("E")
+
         return objects
 
 class ExplorerBot(BaseBot):

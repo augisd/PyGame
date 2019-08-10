@@ -18,11 +18,14 @@ class Map:
         self.cluster_sizes = [1, 4, 9, 16, 25, 36]
         self.coin_spawn_distance = SPAWN_DIST_COINS
         self.enemy_spawn_distance = SPAWN_DIST_ENEMIES
-        random.seed(11)
+        self.wall_coordinates = 0
+        self.map_percentage_revealed = 0.5
+        self.n_walls = 0
+        random.seed(12)
         self.create_map()
 
     def update(self):
-        self.grid = self.make_grid()
+        #self.grid = self.make_grid()
         #self.player_row = int(self.game.player.y / TILESIZE)
         #self.player_col = int(self.game.player.x / TILESIZE)
         if len(self.game.coins) == 0:
@@ -41,6 +44,14 @@ class Map:
         self.n_cells_explored()
         #self.cells_unexplored = self.cells_unexplored - self.cells_explored
         self.percentage_map_explored = self.cells_explored / self.cells_unexplored
+
+        # Reveal the map
+        if self.wall_coordinates:
+            for wall in self.wall_coordinates:
+                Wall(self.game, wall[0], wall[1])
+                self.wall_coordinates.remove(wall)
+
+
 
     def create_map(self):
         walls = self.random_walk()
@@ -77,6 +88,12 @@ class Map:
         # Initialize number of empty cells for map exploration skill
         self.cells_unexplored = self.n_cells_unexplored()
 
+        # Get starting wall location coordinates for revealing the map
+        self.wall_coordinates = self.get_wall_coordinates(grid_size=2 * GRIDWIDTH)
+
+        # Initialize number of walls for percentage calculations
+        self.n_walls = len(self.wall_coordinates)
+
         self.fill_map(self.grid)
 
     def find_sprite_spawn_locs(self, clearance=1, distance=5, cluster_size=1):
@@ -101,11 +118,11 @@ class Map:
     def fill_map(self, walls_grid):
         for row in range(len(walls_grid)):
             for col in range(len(walls_grid[0])):
-                if walls_grid[row][col] == "W":
-                    Wall(self.game, col, row)
-                elif walls_grid[row][col] == "C":
+                #if walls_grid[row][col] == "W":
+                #    Wall(self.game, col, row)
+                if walls_grid[row][col] == "C":
                     Coin(self.game, col, row)
-                elif walls_grid[row][col] == "E":
+                if walls_grid[row][col] == "E":
                     Enemy(self.game, col, row)
 
     def spawn_sprite(self, sprite, spawn_distance, cluster_size= 1):
@@ -120,8 +137,6 @@ class Map:
                         sprite(self.game, loc[1] + col, loc[0] + row)
         else:
             pass
-
-    #print(self.player.rect.x / TILESIZE - ((SCREEN_WIDTH / 2) / TILESIZE), self.player.rect.x / TILESIZE + ((SCREEN_WIDTH / 2) / TILESIZE))
 
     def n_cells_unexplored(self):
         self.n_cells = 0
@@ -154,7 +169,7 @@ class Map:
                     self.cells_explored += 1
 
     def make_grid(self):
-        grid = [[" " for col in range(MAPGRIDWIDTH)] for row in range(MAPGRIDHEIGHT)]
+        grid = [[" " for col in range(MAPGRIDWIDTH + 1)] for row in range(MAPGRIDHEIGHT + 1)]
         for sprite in self.game.all_sprites:
             name = sprite.__class__.__name__
             y = int(sprite.rect.y / TILESIZE)
@@ -168,6 +183,28 @@ class Map:
             for j in range(len(grid[0])):
                 print(grid[i][j], end=" ")
             print()
+
+    def get_wall_coordinates(self, grid_size=GRIDWIDTH):
+
+        # grid_size parameter determines the size of the grid around the player
+        # which will have the walls revealed
+
+        # coords list will have the coordinates of each wall location
+        # which will be used to spawn wall sprites
+        coords = []
+
+        # iterate through the grid around the center of the map and get wall locations
+        for row in range(int(-grid_size / 2), int(grid_size / 2), 1):
+
+            for col in range(int(-grid_size / 2), int(grid_size / 2), 1):
+
+                check_row = row + PLAYER_START_POS[1]
+                check_col = col + PLAYER_START_POS[0]
+
+                if self.grid[check_row][check_col] == "W":
+                    coords.append([check_row, check_col])
+
+        return coords
 
     def random_walk(self, height=GRIDHEIGHT * 3,
                     width=GRIDWIDTH * 3,

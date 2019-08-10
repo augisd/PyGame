@@ -27,9 +27,9 @@ class Game:
 
     def new_game(self):
         self.map = Map(self)
-        #self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player_model = PlayerModel(self)
@@ -73,7 +73,7 @@ class Game:
                 if event.key == pg.K_d:
                     self.player.shoot("RIGHT")
                 if event.key == pg.K_m:
-                    self.map.print_map(self.map.make_grid())
+                    self.map.print_map(self.map.grid)
                 if event.key == pg.K_t:
                     self.map.print_map(self.map.grid_explored)
 
