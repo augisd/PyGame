@@ -8,7 +8,7 @@ class Player(pg.sprite.Sprite):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE * 2, TILESIZE * 2))
+        self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill((PLAYER_COL))
         self.rect = self.image.get_rect()
         self.x = x * TILESIZE
@@ -27,7 +27,6 @@ class Player(pg.sprite.Sprite):
         if pg.sprite.spritecollide(self, self.game.coins, True):
             self.coins_collected += 1
             self.coin_picked_up = True
-            print(self.coins_collected)
 
         self.get_keys()
         self.x += self.vx * self.game.dt
@@ -179,7 +178,7 @@ class Enemy(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.enemies
         self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
-        self.image = pg.Surface((TILESIZE * 2, TILESIZE * 2))
+        self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(ENEMY_COL)
         self.rect = self.image.get_rect()
         self.hp = 10
@@ -187,8 +186,8 @@ class Enemy(pg.sprite.Sprite):
         self.y = y
         self.rect.centerx = self.x * TILESIZE + TILESIZE / 2
         self.rect.centery = self.y * TILESIZE + TILESIZE / 2
-        self.speedx = 0
-        self.speedy = 0
+        self.vx = 0
+        self.vy = 0
 
         self.action_timer_start = time.perf_counter()
         self.action_update_time = 1
@@ -208,7 +207,7 @@ class Enemy(pg.sprite.Sprite):
         self.action_timer = self.action_timer_end - self.action_timer_start
 
         if self.action_timer > self.action_update_time:
-
+            print(self.state)
             self.states.get(self.state)()
             self.action_timer_start = time.perf_counter()
 
@@ -221,11 +220,16 @@ class Enemy(pg.sprite.Sprite):
 
         move_to = random.choice([[1, 0], [0, 1], [-1, 0], [0, -1]])
 
-        self.x += move_to[0]
-        self.y += move_to[1]
+        self.vx = move_to[0]
+        self.vy = move_to[1]
 
-        self.rect.x = self.x * TILESIZE
-        self.rect.y = self.y * TILESIZE
+        self.x += self.vx
+        self.y += self.vy
+
+        #self.rect.x = self.x * TILESIZE
+        self.collide_with_walls("x")
+        #self.rect.y = self.y * TILESIZE
+        self.collide_with_walls("y")
 
     def shoot_back(self):
 
@@ -294,3 +298,32 @@ class Enemy(pg.sprite.Sprite):
 
             else:
                 self.shoot_in_x_direction()
+
+    def collide_with_walls(self, dir):
+
+        if dir == "x":
+            hits = pg.sprite.spritecollide(self, self.game.walls, False)
+            if hits:
+                if self.vx > 0:
+                    self.x = self.x - 1
+                if self.vx < 0:
+                    self.x = self.x + 1
+                self.vx = 0
+                #self.rect.x = self.x * TILESIZE
+
+        self.rect.x = self.x * TILESIZE
+
+        if dir == "y":
+            hits = pg.sprite.spritecollide(self, self.game.walls, False)
+            if hits:
+                if self.vy > 0:
+                    self.y = self.y - 1
+                if self.vy < 0:
+                    self.y = self.y + 1
+                self.vy = 0
+                #self.rect.y = self.y * TILESIZE
+
+        self.rect.y = self.y * TILESIZE
+
+        self.vx = 0
+        self.vy = 0

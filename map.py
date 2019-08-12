@@ -25,9 +25,7 @@ class Map:
         self.create_map()
 
     def update(self):
-        #self.grid = self.make_grid()
-        #self.player_row = int(self.game.player.y / TILESIZE)
-        #self.player_col = int(self.game.player.x / TILESIZE)
+
         if len(self.game.coins) == 0:
             #random.seed(COIN_SEED)
             for coin in range(self.n_coins):
@@ -46,17 +44,14 @@ class Map:
         self.percentage_map_explored = self.cells_explored / self.cells_unexplored
 
         # Reveal the map
-        if self.wall_coordinates:
-            for wall in self.wall_coordinates:
-                Wall(self.game, wall[0], wall[1])
-                self.wall_coordinates.remove(wall)
-
+        #if self.wall_coordinates:
+        #    for wall in self.wall_coordinates:
+        #        Wall(self.game, wall[1], wall[0])
+        #        self.wall_coordinates.remove(wall)
 
 
     def create_map(self):
         walls = self.random_walk()
-        #walls_adjacent = self.adjacent(walls)
-        #self.grid = walls_adjacent
 
         # First create map layout (walls and walkable areas)
         # including player sprite starting position
@@ -70,11 +65,11 @@ class Map:
         # Next, determine initial spawn locations for coin
         # and enemy sprites
         # First spawn the coins:
+
         for coin in range(self.n_coins):
             choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance)
             loc = random.choice(choices)
             self.grid[loc[0]][loc[1]] = "C"
-
 
         # Then enemies:
         for enemy in range(self.n_enemies):

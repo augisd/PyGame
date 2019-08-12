@@ -95,18 +95,11 @@ class BaseBot(Player, pg.sprite.Sprite):
         screen_top_left_y = int(self.rect.y / TILESIZE) - int(GRIDHEIGHT / 2)
         screen_grid = self.game.map.grid[screen_top_left_y:(screen_top_left_y + GRIDHEIGHT)][screen_top_left_x:(screen_top_left_x + GRIDWIDTH)]
 
-        #for row in range(screen_top_left_y, screen_top_left_y + GRIDHEIGHT, 1):
-        #    for col in range(screen_top_left_x, screen_top_left_x + GRIDWIDTH, 1):
-        #        if self.game.map.grid[row][col] == "C":
-        #            objects.append("C")
-        #        elif self.game.map.grid[row][col] == "E":
-        #            objects.append("E")
-
-        for row in screen_grid:
-            for col in row:
-                if col == "C":
+        for row in range(screen_top_left_y, screen_top_left_y + GRIDHEIGHT, 1):
+            for col in range(screen_top_left_x, screen_top_left_x + GRIDWIDTH, 1):
+                if self.game.map.grid[row][col] == "C":
                     objects.append("C")
-                if col == "E":
+                elif self.game.map.grid[row][col] == "E":
                     objects.append("E")
 
         return objects

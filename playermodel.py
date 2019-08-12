@@ -3,6 +3,7 @@ import pygame as pg
 #from game import Game
 from settings import *
 import time
+import pandas as pd
 
 
 class PlayerType():
@@ -11,10 +12,16 @@ class PlayerType():
         self.game = game
         self.tendency = 1
         self.skill = 1
-        self.tendency_decrement = -0.5
+        self.tendency_decrement = -0.001
         self.skill_modifier = 0.01
         self.tendency_increment = 1
-        self.skill_increment = 5
+        self.skill_increment = 1
+
+        # Variables for skill data collection and calculation
+        self.skill_data = {"n_coins" : [], "dist" : [], "time" : []}
+        self.skill_data_csv = pd.read_csv('test_data.csv')
+        #del self.skill_data_csv["Unnamed: 0"]
+        #print(self.skill_data_csv)
 
     def increase_tendency(self):
         self.tendency += self.tendency_increment
@@ -58,55 +65,96 @@ class Explorer(PlayerType):
         PlayerType.__init__(self, game)
         self.start_time = time.perf_counter()
         self.coins_collected = 0
+        self.coins_collected_previous = 0
+        self.coin_streak = 0
+        self.skill_coin_streak = 0
         self.total_coins = 0
         self.end_time = time.perf_counter()
         self.time_elapsed = self.end_time - self.start_time
-        self.skill = 1
         self.avg_skill = []
         self.all_times = []
 
-        self.tendency_timer_start = time.perf_counter()
+        self.tendency_timer_start = 0
         self.tendency_timer_end = 0
         self.tendency_timer = 0
+
+        self.skill_timer_start = time.perf_counter()
+        self.skill_timer_end = 0
+        self.skill_timer = 0
+        self.coins_per_min = 0
 
         self.percentage_map_explored = self.game.map.percentage_map_explored
 
     def update_tendency(self):
 
-        self.coins_collected = self.game.player.coins_collected
+        # Calculate tendency
 
-        if self.coins_collected >= 10:
-            self.game.map.n_coins = self.coins_collected // 10 + N_COINS
+        # Check if a coin was collected
+
+        if self.coin_collected():
+            # Start tendency timer
+            self.tendency_timer_start = time.perf_counter()
+
+            self.coin_streak += 1
+            #self.coins_collected_previous = self.coins_collected
 
         self.tendency_timer_end = time.perf_counter()
         self.tendency_timer = self.tendency_timer_end - self.tendency_timer_start
 
-        if self.game.player.coin_picked_up:
-            self.tendency_timer_start = time.perf_counter()
-            self.increase_tendency()
-
+        # After 5 seconds, if another coin was not picked up in next 5 seconds,
+        # assume it was an accident and decrease tendency and reset streak
         if self.tendency_timer > 5:
             self.decrease_tendency()
-            self.tendency_timer_start = time.perf_counter()
+            self.coin_streak = 0
+
+        # Else, increase explorer tendency after collection of 5 coins
+        if self.coin_streak > 5:
+            self.increase_tendency()
+            self.coin_streak = 0
+            self.game.map.n_coins = self.coins_collected // 10 + N_COINS
 
 
     def update_skill(self):
 
+        # Calculate skill
+        if self.coin_collected():
+            self.skill_coin_streak += 1
+
+            # One all the coins are collected - update the skill
+            if len(self.game.coins) == self.game.map.n_coins:
+                self.skill_timer_end = time.perf_counter()
+                self.skill_timer = self.skill_timer_end - self.skill_timer_start
+
+                self.skill_data["n_coins"].append(self.skill_coin_streak)
+                self.skill_data["dist"].append(self.game.map.coin_spawn_distance)
+                self.skill_data["time"].append(self.skill_timer)
+                #print(pd.DataFrame(self.skill_data))
+                self.skill_data_csv = self.skill_data_csv.append(pd.DataFrame(self.skill_data).tail(1))
+                #print(self.skill_data_csv)
+                self.skill_data_csv.to_csv("test_data.csv", index=False)
+
+                self.skill_coin_streak = 0
+                self.skill_timer_start = time.perf_counter()
+
         # Scale spawn distance with skill
-        if self.skill > 10:
-            self.game.map.coin_spawn_distance = int(self.skill) * 3 // 10 + SPAWN_DIST_COINS
+        #self.game.map.coin_spawn_distance = (int(self.skill) * 2 // 10) + SPAWN_DIST_COINS
 
         # 1. Number of coins collected
-        self.coins_collected = self.game.player.coins_collected
+        #self.coins_collected = self.game.player.coins_collected
 
         # 2. Percentage of Map explored
-        self.percentage_map_explored = self.game.map.percentage_map_explored
+        #self.percentage_map_explored = self.game.map.percentage_map_explored
 
         # Get time played
-        self.end_time = time.perf_counter()
-        self.time_elapsed = self.end_time - self.start_time
+        #self.end_time = time.perf_counter()
+        #self.time_elapsed = self.end_time - self.start_time
+        #self.skill = 100 * self.coins_collected * self.percentage_map_explored / (self.time_elapsed * 0.5)
+        # Update coin collection
+        self.coins_collected_previous = self.coins_collected
+        self.coins_collected = self.game.player.coins_collected
 
-        self.skill = 100 * self.coins_collected * self.percentage_map_explored / self.time_elapsed
+    def coin_collected(self):
+        return self.coins_collected > self.coins_collected_previous
 
 class Killer(PlayerType):
     # Enemy kill event increases killer tendency
@@ -142,7 +190,6 @@ class Killer(PlayerType):
 
         self.end_killing_time = time.perf_counter()
         self.killing_time = self.end_killing_time - self.start_killing_time
-
         self.kills_per_minute = self.enemies_killed * 60 / self.killing_time
 
         self.skill = self.kills_per_minute * self.accuracy 
