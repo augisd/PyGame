@@ -3,6 +3,8 @@ import random
 from settings import *
 from sprites import *
 from pygame.locals import *
+import math
+
 class Map:
     def __init__(self, game):
         self.game = game
@@ -15,7 +17,7 @@ class Map:
         self.height = GRIDHEIGHT * 2
         self.n_coins = N_COINS
         self.n_enemies = N_ENEMIES
-        self.cluster_sizes = [1, 4, 9, 16, 25, 36]
+        self.cluster_sizes = [1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 9, 9, 9, 9, 16, 16, 16, 25, 25, 36, 36, 64, 100]
         self.coin_spawn_distance = SPAWN_DIST_COINS
         self.enemy_spawn_distance = SPAWN_DIST_ENEMIES
         self.wall_coordinates = 0
@@ -27,10 +29,18 @@ class Map:
     def update(self):
 
         if len(self.game.coins) == 0:
-            #random.seed(COIN_SEED)
-            for coin in range(self.n_coins):
-                self.grid = self.make_grid()
-                self.spawn_sprite(Coin, self.coin_spawn_distance)
+            self.grid = self.make_grid()
+            self.coin_clusters = self.cluster_coins(self.n_coins)
+
+            for cluster in self.coin_clusters:
+                location_choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance,
+                                                               cluster_size=int(math.sqrt(cluster)))
+                location = random.choice(location_choices)
+
+                for coin_row in range(int(math.sqrt(cluster))):
+                    for coin_col in range(int(math.sqrt(cluster))):
+                        Coin(self.game, location[1] + coin_col, location[0] + coin_row)
+                        #self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
 
         if len(self.game.enemies) == 0:
             for enemy in range(self.n_enemies):
@@ -65,11 +75,17 @@ class Map:
         # Next, determine initial spawn locations for coin
         # and enemy sprites
         # First spawn the coins:
+        # Randomly select cluster sizes from number of coins
+        self.coin_clusters = self.cluster_coins(self.n_coins)
+        print(self.coin_clusters)
 
-        for coin in range(self.n_coins):
-            choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance)
-            loc = random.choice(choices)
-            self.grid[loc[0]][loc[1]] = "C"
+        for cluster in self.coin_clusters:
+            location_choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance, cluster_size=int(math.sqrt(cluster)))
+            location = random.choice(location_choices)
+
+            for coin_row in range(int(math.sqrt(cluster))):
+                for coin_col in range(int(math.sqrt(cluster))):
+                    self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
 
         # Then enemies:
         for enemy in range(self.n_enemies):
@@ -90,6 +106,32 @@ class Map:
         self.n_walls = len(self.wall_coordinates)
 
         self.fill_map(self.grid)
+
+    def cluster_coins(self, n):
+        choices = n
+        clusters = []
+
+        while choices != 0:
+            # Min and max sizes of clusters
+            cluster_size_choices = []
+            for i in range(len(self.cluster_sizes)):
+                cluster_size_choices.append(self.cluster_sizes[i])
+
+                if self.cluster_sizes[i] > choices:
+                    cluster_size_choices = cluster_size_choices[:-1]
+                    break
+
+            if not cluster_size_choices:
+                cluster_size = 1
+            else:
+                cluster_size = random.choice(cluster_size_choices)
+
+            clusters.append(cluster_size)
+            choices = choices - cluster_size
+            if choices < 0:
+                break
+
+        return clusters
 
     def find_sprite_spawn_locs(self, clearance=1, distance=5, cluster_size=1):
         locations = []
@@ -113,8 +155,8 @@ class Map:
     def fill_map(self, walls_grid):
         for row in range(len(walls_grid)):
             for col in range(len(walls_grid[0])):
-                #if walls_grid[row][col] == "W":
-                #    Wall(self.game, col, row)
+                if walls_grid[row][col] == "W":
+                    Wall(self.game, col, row)
                 if walls_grid[row][col] == "C":
                     Coin(self.game, col, row)
                 if walls_grid[row][col] == "E":

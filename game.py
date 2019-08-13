@@ -4,6 +4,7 @@ from settings import *
 from AI import *
 from map import *
 from playermodel import *
+from gameadapter import *
 
 
 class Game:
@@ -33,6 +34,7 @@ class Game:
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player_model = PlayerModel(self)
+        self.game_adapter = GameAdapter(self, self.player_model)
 
     def run(self):
         while self.playing:
@@ -48,6 +50,7 @@ class Game:
         self.camera.update(self.player)
         # Update player model tendencies before respawning sprites
         self.player_model.update()
+        self.game_adapter.update()
         self.map.update()
         #if len(self.coins) < N_COINS:
         #   self.map.spawn_sprite(Coin)

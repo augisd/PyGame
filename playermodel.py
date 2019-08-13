@@ -13,7 +13,7 @@ class PlayerType():
         self.tendency = 1
         self.skill = 1
         self.tendency_decrement = -0.001
-        self.skill_modifier = 0.01
+        self.skill_decrement = -1
         self.tendency_increment = 1
         self.skill_increment = 1
 
@@ -23,6 +23,10 @@ class PlayerType():
         #del self.skill_data_csv["Unnamed: 0"]
         #print(self.skill_data_csv)
 
+        self.tendency_timer_start = 0
+        self.tendency_timer_end = 0
+        self.tendency_timer = 0
+
     def increase_tendency(self):
         self.tendency += self.tendency_increment
 
@@ -31,6 +35,9 @@ class PlayerType():
 
     def increase_skill(self):
         self.skill += self.skill_increment
+
+    def decrease_skill(self):
+        self.skill += self.skill_decrement
 
     def get_tendency(self):
         return self.tendency
@@ -54,10 +61,6 @@ class PlayerType():
         if self.skill < 0:
             self.skill = 0
 
-        if self.tendency > 100:
-            self.tendency = 100
-
-
 
 class Explorer(PlayerType):
     # Coin pickup event increases tendency
@@ -74,14 +77,10 @@ class Explorer(PlayerType):
         self.avg_skill = []
         self.all_times = []
 
-        self.tendency_timer_start = 0
-        self.tendency_timer_end = 0
-        self.tendency_timer = 0
-
         self.skill_timer_start = time.perf_counter()
         self.skill_timer_end = 0
         self.skill_timer = 0
-        self.coins_per_min = 0
+        self.skill_decrease_flag = False
 
         self.percentage_map_explored = self.game.map.percentage_map_explored
 
@@ -101,40 +100,58 @@ class Explorer(PlayerType):
         self.tendency_timer_end = time.perf_counter()
         self.tendency_timer = self.tendency_timer_end - self.tendency_timer_start
 
-        # After 5 seconds, if another coin was not picked up in next 5 seconds,
-        # assume it was an accident and decrease tendency and reset streak
+        # If another coin was not picked up in next 5 seconds,
+        # assume it was not intentional and decrease tendency and reset streak
         if self.tendency_timer > 5:
             self.decrease_tendency()
             self.coin_streak = 0
 
         # Else, increase explorer tendency after collection of 5 coins
-        if self.coin_streak > 5:
+        if self.coin_streak >= 5:
             self.increase_tendency()
             self.coin_streak = 0
-            self.game.map.n_coins = self.coins_collected // 10 + N_COINS
-
+            #self.game.map.n_coins = self.coins_collected // 10 + N_COINS
 
     def update_skill(self):
 
         # Calculate skill
-        if self.coin_collected():
+        # If currently on streak and coin picked up, increase streak by 1
+        if self.coin_collected() and self.skill_coin_streak > 0:
             self.skill_coin_streak += 1
 
-            # One all the coins are collected - update the skill
-            if len(self.game.coins) == self.game.map.n_coins:
+            # And if picked up coin was the last one on the screen, update the skill
+            if self.skill_coin_streak == self.game.map.n_coins:
                 self.skill_timer_end = time.perf_counter()
-                self.skill_timer = self.skill_timer_end - self.skill_timer_start
+                self.skill_timer = round(self.skill_timer_end - self.skill_timer_start, 1)
 
+                self.time_to_beat = round(self.game.map.n_coins * self.game.map.coin_spawn_distance / 10, 1)
+
+                # If player is faster than estimated skillfull time, increase skill
+                if self.skill_timer <= self.time_to_beat:
+                    self.increase_skill()
+
+                # Else if not, set flag to true
+                elif self.skill_timer > self.time_to_beat and not self.skill_decrease_flag:
+                    self.skill_decrease_flag = True
+
+                # If failed to match the time twice in a row, decrease skill
+                elif self.skill_timer > self.time_to_beat and self.skill_decrease_flag:
+                    self.decrease_skill()
+                    self.skill_decrease_flag = False
+
+                # Write skill data to CSV
                 self.skill_data["n_coins"].append(self.skill_coin_streak)
                 self.skill_data["dist"].append(self.game.map.coin_spawn_distance)
                 self.skill_data["time"].append(self.skill_timer)
-                #print(pd.DataFrame(self.skill_data))
                 self.skill_data_csv = self.skill_data_csv.append(pd.DataFrame(self.skill_data).tail(1))
-                #print(self.skill_data_csv)
                 self.skill_data_csv.to_csv("test_data.csv", index=False)
 
                 self.skill_coin_streak = 0
-                self.skill_timer_start = time.perf_counter()
+
+        # Else, start new streak and skill timer
+        if self.coin_collected() and self.skill_coin_streak == 0:
+            self.skill_coin_streak += 1
+            self.skill_timer_start = time.perf_counter()
 
         # Scale spawn distance with skill
         #self.game.map.coin_spawn_distance = (int(self.skill) * 2 // 10) + SPAWN_DIST_COINS
@@ -162,7 +179,10 @@ class Killer(PlayerType):
         PlayerType.__init__(self, game)
         self.game = game
         self.last_n_enemies_killed = 0
-        self.enemies_killed = self.game.player.enemies_killed
+        self.enemies_killed = 0
+        self.enemies_killed_previous = 0
+        self.enemy_streak_tendency = 0
+
         self.kills_per_minute = 0
         self.bullets_fired = self.game.player.bullets_fired
         self.accuracy = 0
@@ -171,14 +191,24 @@ class Killer(PlayerType):
 
     def update_tendency(self):
 
-        self.enemies_killed = self.game.player.enemies_killed
+        if self.enemy_killed():
+            # Start tendency timer
+            self.tendency_timer_start = time.perf_counter()
+            self.enemy_streak_tendency += 1
 
-        if self.enemies_killed >= 10:
+        self.tendency_timer_end = time.perf_counter()
+        self.tendency_timer = self.tendency_timer_end - self.tendency_timer_start
 
-            if self.enemies_killed % 5 == 0 and self.enemies_killed != 0:
-                self.increase_tendency()
+        # If another enemy was not killed in next 5 seconds,
+        # assume it was not intentional and decrease tendency and reset streak
+        if self.tendency_timer > 5:
+            self.decrease_tendency()
+            self.enemy_streak_tendency = 0
 
-            self.game.map.n_enemies = self.enemies_killed // 10 + N_ENEMIES
+        # Else, increase killer tendency after collection of 5 coins
+        if self.enemy_streak_tendency >= 5:
+            self.increase_tendency()
+            self.enemy_streak_tendency = 0
 
     def update_skill(self):
         self.bullets_fired = self.game.player.bullets_fired
@@ -199,6 +229,12 @@ class Killer(PlayerType):
             if new_state > 3:
                 new_state = 3
             enemy.state = new_state
+
+        self.enemies_killed_previous = self.enemies_killed
+        self.enemies_killed = self.game.player.enemies_killed
+
+    def enemy_killed(self):
+        return self.enemies_killed > self.enemies_killed_previous
 
 
 class Scorer(PlayerType):
