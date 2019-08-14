@@ -4,11 +4,13 @@ from settings import *
 from sprites import *
 from pygame.locals import *
 import math
+import numpy as np
 
 class Map:
     def __init__(self, game):
         self.game = game
         self.grid = 0
+        self.wall_range = 0
         self.grid_explored = 0
         self.cells_explored = 0
         self.cells_unexplored = 0
@@ -23,6 +25,14 @@ class Map:
         self.wall_coordinates = 0
         self.map_percentage_revealed = 0.5
         self.n_walls = 0
+        self.walls = 0
+
+
+        # Initial player position (to be used for spawning sprites
+        # around player):
+        self.player_row = int(MAPGRIDHEIGHT / 2)
+        self.player_col = int(MAPGRIDWIDTH / 2)
+
         random.seed(12)
         self.create_map()
 
@@ -59,25 +69,56 @@ class Map:
         #        Wall(self.game, wall[1], wall[0])
         #        self.wall_coordinates.remove(wall)
 
+    def reveal_walls(self, length):
+        # Top and bottom rows
+        for col_index in range(-length, length + 1, 1):
+
+            if self.walls[self.player_row - length][self.player_col + col_index] == "W":
+                Wall(self.game, self.player_col + col_index, self.player_row - length)
+
+            if self.walls[self.player_row + length][self.player_col + col_index] == "W":
+                Wall(self.game, self.player_col + col_index, self.player_row + length)
+
+        # Left + right cols
+        for row_index in range(-length + 1, length, 1):
+
+            if self.walls[self.player_row + row_index][self.player_col - length] == "W":
+                Wall(self.game, self.player_col - length, self.player_row + row_index)
+
+            if self.walls[self.player_row + row_index][self.player_col + length] == "W":
+                Wall(self.game, self.player_col + length, self.player_row + row_index)
+
+    def hide_walls(self, length):
+
+        for wall in self.game.walls.sprites():
+
+            for col_index in range(-length, length + 1, 1):
+
+                if ((wall.x == self.player_col + col_index and wall.y == self.player_row - length) or
+                    (wall.x == self.player_col + col_index and wall.y == self.player_row + length)):
+                    wall.kill()
+
+            for row_index in range(-length + 1, length, 1):
+
+                if ((wall.x == self.player_col - length and wall.y == self.player_row + row_index) or
+                    (wall.x == self.player_col + length and wall.y == self.player_row + row_index)):
+                    wall.kill()
+
+
+
 
     def create_map(self):
-        walls = self.random_walk()
+        self.walls = self.random_walk()
 
         # First create map layout (walls and walkable areas)
         # including player sprite starting position
-        self.grid = walls
-
-        # Initial player position (to be used for spawning sprites
-        # around player):
-        self.player_row = int(MAPGRIDHEIGHT / 2)
-        self.player_col = int(MAPGRIDWIDTH / 2)
+        self.grid = self.walls
 
         # Next, determine initial spawn locations for coin
         # and enemy sprites
         # First spawn the coins:
         # Randomly select cluster sizes from number of coins
         self.coin_clusters = self.cluster_coins(self.n_coins)
-        print(self.coin_clusters)
 
         for cluster in self.coin_clusters:
             location_choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance, cluster_size=int(math.sqrt(cluster)))
@@ -106,6 +147,8 @@ class Map:
         self.n_walls = len(self.wall_coordinates)
 
         self.fill_map(self.grid)
+
+
 
     def cluster_coins(self, n):
         choices = n
@@ -155,8 +198,8 @@ class Map:
     def fill_map(self, walls_grid):
         for row in range(len(walls_grid)):
             for col in range(len(walls_grid[0])):
-                if walls_grid[row][col] == "W":
-                    Wall(self.game, col, row)
+                #if walls_grid[row][col] == "W":
+                #    Wall(self.game, col, row)
                 if walls_grid[row][col] == "C":
                     Coin(self.game, col, row)
                 if walls_grid[row][col] == "E":

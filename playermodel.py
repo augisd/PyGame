@@ -81,7 +81,7 @@ class Explorer(PlayerType):
         self.skill_timer_end = 0
         self.skill_timer = 0
         self.skill_decrease_flag = False
-
+        self.previous_tendency = 0
         self.percentage_map_explored = self.game.map.percentage_map_explored
 
     def update_tendency(self):
@@ -108,6 +108,8 @@ class Explorer(PlayerType):
 
         # Else, increase explorer tendency after collection of 5 coins
         if self.coin_streak >= 5:
+            # Save previous state of tendency for adaptation
+            self.previous_tendency = self.tendency
             self.increase_tendency()
             self.coin_streak = 0
             #self.game.map.n_coins = self.coins_collected // 10 + N_COINS

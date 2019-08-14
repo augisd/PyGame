@@ -207,7 +207,6 @@ class Enemy(pg.sprite.Sprite):
         self.action_timer = self.action_timer_end - self.action_timer_start
 
         if self.action_timer > self.action_update_time:
-            print(self.state)
             self.states.get(self.state)()
             self.action_timer_start = time.perf_counter()
 
