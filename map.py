@@ -51,6 +51,7 @@ class Map:
                     for coin_col in range(int(math.sqrt(cluster))):
                         Coin(self.game, location[1] + coin_col, location[0] + coin_row)
                         #self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
+            self.grid = self.make_grid()
 
         if len(self.game.enemies) == 0:
             for enemy in range(self.n_enemies):

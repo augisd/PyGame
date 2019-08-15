@@ -67,6 +67,7 @@ class BaseBot(Player, pg.sprite.Sprite):
         self.game.clock.tick(BOT_DELAY)
         self.coin_picked_up = False
         if pg.sprite.spritecollide(self, self.game.coins, True):
+            self.coins_collected += 1
             self.coin_picked_up = True
 
         self.vx, self.vy = 0, 0
@@ -101,7 +102,6 @@ class BaseBot(Player, pg.sprite.Sprite):
                     objects.append("C")
                 elif self.game.map.grid[row][col] == "E":
                     objects.append("E")
-
         return objects
 
 class ExplorerBot(BaseBot):

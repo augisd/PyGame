@@ -13,7 +13,7 @@ class PlayerType():
         self.tendency = 1
         self.skill = 1
         self.tendency_decrement = -0.001
-        self.skill_decrement = -1
+        self.skill_decrement = -0.001
         self.tendency_increment = 1
         self.skill_increment = 1
 
@@ -26,6 +26,10 @@ class PlayerType():
         self.tendency_timer_start = 0
         self.tendency_timer_end = 0
         self.tendency_timer = 0
+
+        self.skill_timer_start = 0
+        self.skill_timer_end = 0
+        self.skill_timer = 0
 
     def increase_tendency(self):
         self.tendency += self.tendency_increment
@@ -82,14 +86,13 @@ class Explorer(PlayerType):
         self.skill_timer = 0
         self.skill_decrease_flag = False
         self.previous_tendency = 0
+        self.previous_skill = 0
+
         self.percentage_map_explored = self.game.map.percentage_map_explored
 
     def update_tendency(self):
 
-        # Calculate tendency
-
         # Check if a coin was collected
-
         if self.coin_collected():
             # Start tendency timer
             self.tendency_timer_start = time.perf_counter()
@@ -103,6 +106,7 @@ class Explorer(PlayerType):
         # If another coin was not picked up in next 5 seconds,
         # assume it was not intentional and decrease tendency and reset streak
         if self.tendency_timer > 5:
+            self.previous_tendency = self.tendency
             self.decrease_tendency()
             self.coin_streak = 0
 
@@ -130,6 +134,7 @@ class Explorer(PlayerType):
 
                 # If player is faster than estimated skillfull time, increase skill
                 if self.skill_timer <= self.time_to_beat:
+                    self.previous_skill = self.skill
                     self.increase_skill()
 
                 # Else if not, set flag to true
@@ -138,6 +143,7 @@ class Explorer(PlayerType):
 
                 # If failed to match the time twice in a row, decrease skill
                 elif self.skill_timer > self.time_to_beat and self.skill_decrease_flag:
+                    self.previous_skill = self.skill
                     self.decrease_skill()
                     self.skill_decrease_flag = False
 
@@ -184,12 +190,19 @@ class Killer(PlayerType):
         self.enemies_killed = 0
         self.enemies_killed_previous = 0
         self.enemy_streak_tendency = 0
+        self.enemy_streak_skill = 0
 
         self.kills_per_minute = 0
-        self.bullets_fired = self.game.player.bullets_fired
+        self.bullets_fired_streak = 0
+        self.bullets_fired_total = 0
         self.accuracy = 0
         self.start_killing_time = time.perf_counter()
         self.skill_update_time = 10
+
+        self.streak_skill = 0
+        self.streak_skill_previous = 0
+        self.streak_accuracy = 0
+        self.skill_reduce_flag = False
 
     def update_tendency(self):
 
@@ -213,25 +226,46 @@ class Killer(PlayerType):
             self.enemy_streak_tendency = 0
 
     def update_skill(self):
-        self.bullets_fired = self.game.player.bullets_fired
-        if self.skill > 10:
-            self.game.map.enemy_spawn_distance = int(self.skill) // 10 + SPAWN_DIST_ENEMIES
 
-        if self.bullets_fired > 0:
-            self.accuracy = round(self.enemies_killed / self.bullets_fired, 2)
 
-        self.end_killing_time = time.perf_counter()
-        self.killing_time = self.end_killing_time - self.start_killing_time
-        self.kills_per_minute = self.enemies_killed * 60 / self.killing_time
+        if self.enemy_killed():
+            # Start skill measure timer
+            if self.enemy_streak_skill == 0:
+                self.skill_timer_start = time.perf_counter()
+            self.enemy_streak_skill += 1
 
-        self.skill = self.kills_per_minute * self.accuracy 
+        # Measure elapsed time since the kill
+        self.skill_timer_end = time.perf_counter()
+        self.skill_timer = self.skill_timer_end - self.skill_timer_start
 
-        for enemy in self.game.enemies:
-            new_state = self.skill // 10
-            if new_state > 3:
-                new_state = 3
-            enemy.state = new_state
+        if self.skill_timer > 5:
 
+            # Calculate bullets fired during a streak
+            self.bullets_fired_streak = self.game.player.bullets_fired - self.bullets_fired_total
+
+            if self.bullets_fired_streak == 0:
+                self.streak_accuracy = 0
+            else:
+                self.streak_accuracy = round(self.enemy_streak_skill / self.bullets_fired_streak, 2)
+
+            self.kills_per_minute = round((self.enemy_streak_skill / 5) * 60, 1)
+            self.streak_skill = self.streak_accuracy * self.kills_per_minute
+
+            if self.streak_skill > self.streak_skill_previous:
+                self.increase_skill()
+
+            elif self.streak_skill < self.streak_skill_previous and not self.skill_reduce_flag:
+                self.skill_reduce_flag = True
+
+            elif self.streak_skill < self.streak_skill_previous and self.skill_reduce_flag:
+                self.decrease_skill()
+
+            self.streak_skill_previous = self.streak_skill
+            self.enemy_streak_skill = 0
+            self.bullets_fired_total = self.game.player.bullets_fired
+            self.skill_timer_start = time.perf_counter()
+
+        # Update variables for enemy_killed() function
         self.enemies_killed_previous = self.enemies_killed
         self.enemies_killed = self.game.player.enemies_killed
 

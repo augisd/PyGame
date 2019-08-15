@@ -190,7 +190,7 @@ class Enemy(pg.sprite.Sprite):
         self.vy = 0
 
         self.action_timer_start = time.perf_counter()
-        self.action_update_time = 1
+        self.action_update_time = 0
 
         self.states = {
             0 : self.stationary,
