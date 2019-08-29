@@ -1,13 +1,6 @@
 from settings import *
 from playermodel import *
 
-class TendencyAdapter:
-    pass
-
-
-class SkillAdapter:
-    pass
-
 
 class GameAdapter:
     def __init__(self, game, player_model):
@@ -37,16 +30,16 @@ class GameAdapter:
     def adapt_killer_tendency(self):
         self.game.map.n_enemies = int(self.player_model.killer.tendency + N_ENEMIES)
 
-        for enemy in self.game.enemies:
-            new_state = self.player_model.killer.tendency // 10
-            if new_state > 3:
-                new_state = 3
-            enemy.state = new_state
+        #for enemy in self.game.enemies:
+        #    new_state = self.player_model.killer.tendency // 10
+        #    if new_state > 3:
+        #        new_state = 3
+        #    enemy.state = new_state
 
     def adapt_killer_skill(self):
         bot_delay = (self.player_model.killer.skill / 10)
         for enemy in self.game.enemies:
-            enemy.action_update_time = 1 / bot_delay
+            enemy.action_update_time = 10 / self.player_model.killer.skill
 
     def update(self):
         self.adapt_explorer_tendency()

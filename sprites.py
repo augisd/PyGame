@@ -190,7 +190,7 @@ class Enemy(pg.sprite.Sprite):
         self.vy = 0
 
         self.action_timer_start = time.perf_counter()
-        self.action_update_time = 0
+        self.action_update_time = 5
 
         self.states = {
             0 : self.stationary,
@@ -199,13 +199,12 @@ class Enemy(pg.sprite.Sprite):
             3 : self.seek_player
         }
 
-        self.state = 0
+        self.state = 2
 
     def update(self):
         # Check update time
         self.action_timer_end = time.perf_counter()
         self.action_timer = self.action_timer_end - self.action_timer_start
-
         if self.action_timer > self.action_update_time:
             self.states.get(self.state)()
             self.action_timer_start = time.perf_counter()
@@ -233,16 +232,19 @@ class Enemy(pg.sprite.Sprite):
     def shoot_back(self):
 
         # Move around (previous state)
-        self.move_around()
+        #self.move_around()
 
         # Plus if player in sight - shoot
-        if self.rect.x == self.game.player.rect.x:
-
+        #if self.rect.x == self.game.player.rect.x:
+        #    self.shoot_in_y_direction()
+        if self.game.player.rect.centerx - int(TILESIZE / 2) < self.rect.centerx < self.game.player.rect.centerx + int(TILESIZE / 2):
             self.shoot_in_y_direction()
 
-        elif self.rect.y == self.game.player.rect.y:
-
+        elif self.game.player.rect.centery - int(TILESIZE / 2) < self.rect.centery < self.game.player.rect.centery + int(TILESIZE / 2):
             self.shoot_in_x_direction()
+
+        #elif self.rect.y == self.game.player.rect.y:
+        #    self.shoot_in_x_direction()
 
         else:
             pass
@@ -251,17 +253,17 @@ class Enemy(pg.sprite.Sprite):
         bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
 
         if self.rect.x > self.game.player.rect.x:
-            bullet.speedx = -5
+            bullet.speedx = -3
         else:
-            bullet.speedx = 5
+            bullet.speedx = 3
 
     def shoot_in_y_direction(self):
         bullet = Bullet(self.game, self.rect.centerx, self.rect.centery, False)
 
         if self.rect.y > self.game.player.rect.y:
-            bullet.speedy = -5
+            bullet.speedy = -3
         else:
-            bullet.speedy = 5
+            bullet.speedy = 3
 
     def seek_player(self):
 

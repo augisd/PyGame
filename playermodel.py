@@ -61,13 +61,13 @@ class PlayerType():
 
         if self.tendency > 100:
             self.tendency = 100
-        if self.tendency < 0:
-            self.tendency = 0
+        if self.tendency < 1:
+            self.tendency = 1
 
         if self.skill > 100:
             self.skill = 100
-        if self.skill < 0:
-            self.skill = 0
+        if self.skill < 1:
+            self.skill = 1
 
 
 class Explorer(PlayerType):
