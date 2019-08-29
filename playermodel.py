@@ -59,9 +59,13 @@ class PlayerType():
         self.update_tendency()
         self.update_skill()
 
-        #self.skill -= self.skill_modifier
+        if self.tendency > 100:
+            self.tendency = 100
         if self.tendency < 0:
             self.tendency = 0
+
+        if self.skill > 100:
+            self.skill = 100
         if self.skill < 0:
             self.skill = 0
 
@@ -181,6 +185,7 @@ class Explorer(PlayerType):
     def coin_collected(self):
         return self.coins_collected > self.coins_collected_previous
 
+
 class Killer(PlayerType):
     # Enemy kill event increases killer tendency
     def __init__(self, game):
@@ -277,25 +282,38 @@ class Scorer(PlayerType):
     # Both of the above (consecutively, order does not matter)
     def __init__(self, game):
         PlayerType.__init__(self, game)
-        self.enemy_killed = False
-        self.coin_collected = False
+        self.enemies_cleared_flag = False
+        self.coins_cleared_flag = False
+        self.enemies_cleared_streak = 0
+        self.coins_cleared_streak = 0
 
     def update_tendency(self):
-        if len(self.game.enemies) < N_ENEMIES:
-            self.enemy_killed = True
-            if self.coin_collected:
-                self.increase_tendency()
 
-        if self.enemy_killed and len(self.game.enemies) < N_ENEMIES:
-            self.coin_collected = False
+        # Coins cleared
+        if len(self.game.coins) == 0:
+            print("coins cleared")
+            self.coins_cleared_flag = True
+            self.coins_cleared_streak += 1
 
-        if len(self.game.coins) < N_COINS:
-            self.coin_collected = True
-            if self.enemy_killed:
-                self.increase_tendency()
+        # Enemies cleared
+        if len(self.game.enemies) == 0:
+            print("enemies cleared")
+            self.enemies_cleared_flag = True
+            self.enemies_cleared_streak += 1
 
-        if self.coin_collected and len(self.game.coins) < N_COINS:
-            self.enemy_killed = False
+        # If both cleared - increase scorer tendency
+        if self.coins_cleared_flag and self.enemies_cleared_flag:
+            print("increasing scorer tendency")
+            self.increase_tendency()
+            self.enemies_cleared_flag = False
+            self.coins_cleared_flag = False
+            self.enemies_cleared_streak = 0
+            self.coins_cleared_streak = 0
+
+        # If player clears either coins or enemies three times consecutively
+        # start decreasing scorer tendency
+        if self.coins_cleared_streak > 2 or self.enemies_cleared_streak > 2:
+            self.decrease_tendency()
 
     def update_skill(selfs):
         pass

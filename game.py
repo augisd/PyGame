@@ -28,9 +28,9 @@ class Game:
 
     def new_game(self):
         self.map = Map(self)
-        #self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player_model = PlayerModel(self)
@@ -52,10 +52,7 @@ class Game:
         self.player_model.update()
         self.game_adapter.update()
         self.map.update()
-        #if len(self.coins) < N_COINS:
-        #   self.map.spawn_sprite(Coin)
-        #if len(self.enemies) < N_ENEMIES:
-        #    self.map.spawn_sprite(Enemy)
+
 
     def events(self):
         for event in pg.event.get():
@@ -86,7 +83,8 @@ class Game:
                 if event.key == pg.K_x:
                     self.map.spawn_sprite2(Coin)
                 if event.key == pg.K_p:
-                    print(self.map.percentage_map_explored)
+                    for wall in self.walls:
+                        print(wall.rect)
 
     def render(self):
         self.screen.fill(SCREEN_COL)

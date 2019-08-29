@@ -64,14 +64,13 @@ class BaseBot(Player, pg.sprite.Sprite):
 
     def update(self):
         # Pickup coin
-        self.game.clock.tick(BOT_DELAY)
-        self.coin_picked_up = False
+        #self.game.clock.tick(BOT_DELAY)
+        self.current_state()
+        #self.coin_picked_up = False
         if pg.sprite.spritecollide(self, self.game.coins, True):
             self.coins_collected += 1
-            self.coin_picked_up = True
+            #self.coin_picked_up = True
 
-        self.vx, self.vy = 0, 0
-        self.current_state()
         self.x += self.vx * self.game.dt
         self.y += self.vy * self.game.dt
 
@@ -99,6 +98,7 @@ class BaseBot(Player, pg.sprite.Sprite):
         for row in range(screen_top_left_y, screen_top_left_y + GRIDHEIGHT, 1):
             for col in range(screen_top_left_x, screen_top_left_x + GRIDWIDTH, 1):
                 if self.game.map.grid[row][col] == "C":
+                    print("adding C")
                     objects.append("C")
                 elif self.game.map.grid[row][col] == "E":
                     objects.append("E")
@@ -112,8 +112,8 @@ class ExplorerBot(BaseBot):
         self.move_around()
 
     def collect_coins(self):
-        if "C" not in self.get_screen_objects():
-            self.current_state = self.explore
+        #if "C" not in self.get_screen_objects():
+        #    self.current_state = self.explore
         # Move the player sprite towards the nearest coin
         go_to = self.get_closest_coin()
         self.go_to_coin(go_to)
@@ -129,6 +129,9 @@ class ExplorerBot(BaseBot):
             if (abs(self.x - coin.x) + abs(self.y - coin.y) <
                     abs(self.x - closest_coin[0]) + abs(self.y - closest_coin[1])):
                 closest_coin = [coin.x, coin.y]
+            elif (abs(self.x - coin.x) + abs(self.y - coin.y) ==
+                    abs(self.x - closest_coin[0]) + abs(self.y - closest_coin[1])):
+                closest_coin = [coin.x, coin.y]
         return closest_coin
 
     def go_to_coin(self, coord):
@@ -136,6 +139,7 @@ class ExplorerBot(BaseBot):
         target_x = int(coord[0] / TILESIZE)
         target_y = int(coord[1] / TILESIZE)
         target = (target_y, target_x)
+
         start_x = int(self.x / TILESIZE)
         start_y = int(self.y / TILESIZE)
         start = (start_y, start_x)

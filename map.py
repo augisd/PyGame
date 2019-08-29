@@ -5,11 +5,12 @@ from sprites import *
 from pygame.locals import *
 import math
 import numpy as np
-
+from copy import deepcopy
 class Map:
     def __init__(self, game):
         self.game = game
         self.grid = 0
+        self.grid_walls_only = 0
         self.wall_range = 0
         self.grid_explored = 0
         self.cells_explored = 0
@@ -19,7 +20,7 @@ class Map:
         self.height = GRIDHEIGHT * 2
         self.n_coins = N_COINS
         self.n_enemies = N_ENEMIES
-        self.cluster_sizes = [1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 9, 9, 9, 9, 16, 16, 16, 25, 25, 36, 36, 64, 100]
+        self.cluster_sizes = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 9, 9, 9, 9, 16, 16, 16, 25, 25, 36, 36, 64, 100]
         self.coin_spawn_distance = SPAWN_DIST_COINS
         self.enemy_spawn_distance = SPAWN_DIST_ENEMIES
         self.wall_coordinates = 0
@@ -45,13 +46,17 @@ class Map:
             for cluster in self.coin_clusters:
                 location_choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance,
                                                                cluster_size=int(math.sqrt(cluster)))
-                location = random.choice(location_choices)
+                if location_choices:
+                    location = random.choice(location_choices)
 
-                for coin_row in range(int(math.sqrt(cluster))):
-                    for coin_col in range(int(math.sqrt(cluster))):
-                        Coin(self.game, location[1] + coin_col, location[0] + coin_row)
-                        #self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
-            self.grid = self.make_grid()
+                    for coin_row in range(int(math.sqrt(cluster))):
+                        for coin_col in range(int(math.sqrt(cluster))):
+                            Coin(self.game, location[1] + coin_col, location[0] + coin_row)
+                            #self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
+
+                    self.grid = self.make_grid()
+                else:
+                    continue
 
         if len(self.game.enemies) == 0:
             for enemy in range(self.n_enemies):
@@ -60,9 +65,9 @@ class Map:
 
         # Check where in the grid the player has been
         # and update percentage of grid explored
-        self.n_cells_explored()
+        #self.n_cells_explored()
         #self.cells_unexplored = self.cells_unexplored - self.cells_explored
-        self.percentage_map_explored = self.cells_explored / self.cells_unexplored
+        #self.percentage_map_explored = self.cells_explored / self.cells_unexplored
 
         # Reveal the map
         #if self.wall_coordinates:
@@ -105,15 +110,13 @@ class Map:
                     (wall.x == self.player_col + length and wall.y == self.player_row + row_index)):
                     wall.kill()
 
-
-
-
     def create_map(self):
         self.walls = self.random_walk()
 
         # First create map layout (walls and walkable areas)
         # including player sprite starting position
-        self.grid = self.walls
+        self.grid_walls_only = self.walls
+        self.grid = deepcopy(self.walls)
 
         # Next, determine initial spawn locations for coin
         # and enemy sprites
@@ -123,11 +126,14 @@ class Map:
 
         for cluster in self.coin_clusters:
             location_choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance, cluster_size=int(math.sqrt(cluster)))
-            location = random.choice(location_choices)
+            if location_choices:
+                location = random.choice(location_choices)
 
-            for coin_row in range(int(math.sqrt(cluster))):
-                for coin_col in range(int(math.sqrt(cluster))):
-                    self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
+                for coin_row in range(int(math.sqrt(cluster))):
+                    for coin_col in range(int(math.sqrt(cluster))):
+                        self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
+            else:
+                continue
 
         # Then enemies:
         for enemy in range(self.n_enemies):
@@ -139,17 +145,15 @@ class Map:
         self.grid_explored = self.grid
 
         # Initialize number of empty cells for map exploration skill
-        self.cells_unexplored = self.n_cells_unexplored()
+        #self.cells_unexplored = self.n_cells_unexplored()
 
         # Get starting wall location coordinates for revealing the map
         self.wall_coordinates = self.get_wall_coordinates(grid_size=2 * GRIDWIDTH)
 
         # Initialize number of walls for percentage calculations
-        self.n_walls = len(self.wall_coordinates)
+        #self.n_walls = len(self.wall_coordinates)
 
         self.fill_map(self.grid)
-
-
 
     def cluster_coins(self, n):
         choices = n
@@ -250,13 +254,31 @@ class Map:
                     self.cells_explored += 1
 
     def make_grid(self):
-        grid = [[" " for col in range(MAPGRIDWIDTH + 1)] for row in range(MAPGRIDHEIGHT + 1)]
-        for sprite in self.game.all_sprites:
-            name = sprite.__class__.__name__
-            y = int(sprite.rect.y / TILESIZE)
-            x = int(sprite.rect.x / TILESIZE)
-            grid[y][x] = name[0]
+        # First, copy walls layout
+        grid = deepcopy(self.grid_walls_only)
+        # Next, find locations of existing coins
+        for coin in self.game.coins:
+            y = int(coin.rect.y / TILESIZE)
+            x = int(coin.rect.x / TILESIZE)
+            grid[y][x] = "C"
 
+        # Same for enemy sprites
+        for enemy in self.game.enemies:
+            y = int(enemy.rect.y / TILESIZE)
+            x = int(enemy.rect.x / TILESIZE)
+            grid[y][x] = "E"
+
+        # Lastly, add players location
+        y = int(self.game.player.rect.y / TILESIZE)
+        x = int(self.game.player.rect.x / TILESIZE)
+        grid[y][x] = "P"
+
+        #grid = [[" " for col in range(MAPGRIDWIDTH + 1)] for row in range(MAPGRIDHEIGHT + 1)]
+        #for sprite in self.game.all_sprites:
+        #    name = sprite.__class__.__name__
+        #    y = int(sprite.rect.y / TILESIZE)
+        #    x = int(sprite.rect.x / TILESIZE)
+        #    grid[y][x] = name[0]
         return grid
 
     def print_map(self, grid):
