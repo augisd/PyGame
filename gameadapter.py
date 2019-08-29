@@ -41,6 +41,10 @@ class GameAdapter:
         for enemy in self.game.enemies:
             enemy.action_update_time = 10 / self.player_model.killer.skill
 
+        self.game.map.enemy_spawn_distance = int(self.player_model.killer.skill) + SPAWN_DIST_ENEMIES
+        if self.game.map.enemy_spawn_distance > MAPGRIDWIDTH - 30:
+            self.game.map.enemy_spawn_distance = MAPGRIDWIDTH - 30
+
     def update(self):
         self.adapt_explorer_tendency()
         self.adapt_explorer_skill()

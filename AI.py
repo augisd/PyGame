@@ -65,6 +65,8 @@ class BaseBot(Player, pg.sprite.Sprite):
     def update(self):
         # Pickup coin
         #self.game.clock.tick(BOT_DELAY)
+        self.vx = 0
+        self.vy = 0
         self.current_state()
         #self.coin_picked_up = False
         if pg.sprite.spritecollide(self, self.game.coins, True):
@@ -98,7 +100,6 @@ class BaseBot(Player, pg.sprite.Sprite):
         for row in range(screen_top_left_y, screen_top_left_y + GRIDHEIGHT, 1):
             for col in range(screen_top_left_x, screen_top_left_x + GRIDWIDTH, 1):
                 if self.game.map.grid[row][col] == "C":
-                    print("adding C")
                     objects.append("C")
                 elif self.game.map.grid[row][col] == "E":
                     objects.append("E")
@@ -162,7 +163,6 @@ class KillerBot(BaseBot):
 
     def kill_enemies(self):
         if "E" not in self.get_screen_objects():
-            print("No enemies")
             self.current_state = self.explore
 
         # Find closest enemy
@@ -180,8 +180,8 @@ class KillerBot(BaseBot):
                         self.game.enemies.sprites()[0].y]
 
         for enemy in self.game.enemies.sprites():
-            if (abs(self.x - enemy.x) + abs(self.y - enemy.y) <
-                    abs(self.x - closest_enemy[0]) + abs(self.y - closest_enemy[1])):
+            if (abs(int(self.x/TILESIZE) - enemy.x) + abs(int(self.y/TILESIZE) - enemy.y) <
+                    abs(int(self.x/TILESIZE) - closest_enemy[0]) + abs(int(self.y/TILESIZE) - closest_enemy[1])):
                 closest_enemy = [enemy.x, enemy.y]
         return closest_enemy
 
@@ -198,8 +198,10 @@ class KillerBot(BaseBot):
 
         if distance_x_abs < distance_y_abs:
             move_in = "x"
+
         if distance_x_abs > distance_y_abs:
             move_in = "y"
+
         if distance_x_abs == distance_y_abs:
             move_in = random.choice(["x", "y"])
 
@@ -207,33 +209,51 @@ class KillerBot(BaseBot):
 
             if distance_x > 0:
                 self.vx = -PLAYER_SPEED
+
             elif distance_x < 0:
                 self.vx = PLAYER_SPEED
 
             else:
 
-                if distance_y > 0:
-                    if not self.game.bullets:
-                        self.shoot("UP")
+                if distance_y > 5:
+                    self.vy = -PLAYER_SPEED
 
-                if distance_y < 0:
-                    if not self.game.bullets:
-                       self.shoot("DOWN")
+                elif distance_y < -5:
+                    self.vy = PLAYER_SPEED
+
+                else:
+
+                    if distance_y > 0:
+                        if not self.game.bullets:
+                            self.shoot("UP")
+
+                    if distance_y < 0:
+                        if not self.game.bullets:
+                           self.shoot("DOWN")
 
         if move_in == "y":
 
             if distance_y > 0:
                 self.vy = -PLAYER_SPEED
+
             elif distance_y < 0:
                 self.vy = PLAYER_SPEED
 
             else:
 
-                if distance_x > 0:
-                    if not self.game.bullets:
-                        self.shoot("LEFT")
+                if distance_x > 5:
+                    self.vx = -PLAYER_SPEED
 
-                if distance_x < 0:
-                    if not self.game.bullets:
-                        self.shoot("RIGHT")
+                elif distance_x < -5:
+                    self.vx = PLAYER_SPEED
+
+                else:
+
+                    if distance_x > 0:
+                        if not self.game.bullets:
+                            self.shoot("LEFT")
+
+                    if distance_x < 0:
+                        if not self.game.bullets:
+                            self.shoot("RIGHT")
 

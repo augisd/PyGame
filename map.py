@@ -41,7 +41,7 @@ class Map:
 
         if len(self.game.coins) == 0:
             self.grid = self.make_grid()
-            self.coin_clusters = self.cluster_coins(self.n_coins)
+            self.coin_clusters = self.cluster_sprites(self.n_coins)
 
             for cluster in self.coin_clusters:
                 location_choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance,
@@ -59,9 +59,27 @@ class Map:
                     continue
 
         if len(self.game.enemies) == 0:
-            for enemy in range(self.n_enemies):
-                self.grid = self.make_grid()
-                self.spawn_sprite(Enemy, self.enemy_spawn_distance)
+            #for enemy in range(self.n_enemies):
+            #    self.grid = self.make_grid()
+            #    self.spawn_sprite(Enemy, self.enemy_spawn_distance)
+
+            self.grid = self.make_grid()
+            self.enemy_clusters = self.cluster_sprites(self.n_enemies)
+
+            for cluster in self.enemy_clusters:
+                location_choices = self.find_sprite_spawn_locs(distance=self.enemy_spawn_distance,
+                                                               cluster_size=int(math.sqrt(cluster)))
+                if location_choices:
+                    location = random.choice(location_choices)
+
+                    for enemy_row in range(int(math.sqrt(cluster))):
+                        for enemy_col in range(int(math.sqrt(cluster))):
+                            Enemy(self.game, location[1] + enemy_col, location[0] + enemy_row)
+                            # self.grid[location[0] + coin_row][location[1] + coin_col] = "C"
+
+                    self.grid = self.make_grid()
+                else:
+                    continue
 
         # Check where in the grid the player has been
         # and update percentage of grid explored
@@ -122,7 +140,7 @@ class Map:
         # and enemy sprites
         # First spawn the coins:
         # Randomly select cluster sizes from number of coins
-        self.coin_clusters = self.cluster_coins(self.n_coins)
+        self.coin_clusters = self.cluster_sprites(self.n_coins)
 
         for cluster in self.coin_clusters:
             location_choices = self.find_sprite_spawn_locs(distance=self.coin_spawn_distance, cluster_size=int(math.sqrt(cluster)))
@@ -155,7 +173,7 @@ class Map:
 
         self.fill_map(self.grid)
 
-    def cluster_coins(self, n):
+    def cluster_sprites(self, n):
         choices = n
         clusters = []
 
