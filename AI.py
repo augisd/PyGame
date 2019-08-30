@@ -105,6 +105,7 @@ class BaseBot(Player, pg.sprite.Sprite):
                     objects.append("E")
         return objects
 
+
 class ExplorerBot(BaseBot):
     def explore(self):
         if "C" in self.get_screen_objects():
@@ -179,7 +180,6 @@ class KillerBot(BaseBot):
 
         closest_enemy = [self.game.enemies.sprites()[0].x,
                         self.game.enemies.sprites()[0].y]
-
         for enemy in self.game.enemies.sprites():
             if (abs(int(self.x/TILESIZE) - enemy.x) + abs(int(self.y/TILESIZE) - enemy.y) <
                     abs(int(self.x/TILESIZE) - closest_enemy[0]) + abs(int(self.y/TILESIZE) - closest_enemy[1])):
@@ -187,7 +187,63 @@ class KillerBot(BaseBot):
         return closest_enemy
 
     def seek_enemy(self, coord):
+        shot_distance = 7
 
+        target_x = int(coord[0])
+        target_y = int(coord[1])
+        target = (target_y, target_x)
+
+        start_x = int(self.x / TILESIZE)
+        start_y = int(self.y / TILESIZE)
+        start = (start_y, start_x)
+
+        distance = (start[0] - target[0], start[1] - target[1])
+        distance_y_abs = abs(distance[0])
+        distance_x_abs = abs(distance[1])
+
+        if distance_y_abs < distance_x_abs:
+            target_parallel = (start_y, target_x)
+
+        elif distance_y_abs > distance_x_abs:
+            target_parallel = (target_y, start_x)
+
+        elif distance_y_abs == distance_x_abs:
+            target_parallel = random.choice([(target_y, start_x), (start_y, target_x)])
+
+        grid = self.game.map.grid
+
+        path = astar(grid, start, target_parallel)
+        print(path)
+        if len(path) == 1:
+            next_move = path[0]
+        else:
+            next_move = path[1]
+
+        self.vx = PLAYER_SPEED * (next_move[1] - start_x)
+        self.vy = PLAYER_SPEED * (next_move[0] - start_y)
+
+        if distance[0] == 0 and distance[1] < 0:
+            self.vx = 0
+            if len(self.game.bullets) < 1:
+                self.shoot("RIGHT")
+
+        elif distance[0] == 0 and distance[1] > 0:
+            self.vx = 0
+            if len(self.game.bullets) < 1:
+                self.shoot("LEFT")
+
+        elif distance[1] == 0 and distance[0] < 0:
+            self.vy = 0
+            if len(self.game.bullets) < 1:
+                self.shoot("DOWN")
+
+        elif distance[1] == 0 and distance[0] > 0:
+            self.vy = 0
+            if len(self.game.bullets) < 1:
+                self.shoot("LEFT")
+
+
+"""
         target_x = coord[0]
         target_y = coord[1]
 
@@ -257,13 +313,68 @@ class KillerBot(BaseBot):
                     if distance_x < 0:
                         if not self.game.bullets:
                             self.shoot("RIGHT")
+                            """
 
 
-class ScorerBot(BaseBot):
+class ScorerBot(ExplorerBot, KillerBot):
 
     def explore(self):
-        if "C" in self.get_screen_objects():
-            self.current_state = self.collect_coins
+        if ("C" or "E") in self.get_screen_objects():
+            self.current_state = self.kill_or_collect
         # Move the player sprite around
         self.move_around()
 
+    def kill_or_collect(self):
+
+        # First find the closest sprite (coin or enemy)
+        closest_sprite = self.get_closest_sprite()
+
+        if closest_sprite[0] == "Coin":
+            self.go_to_coin(closest_sprite[1])
+
+        if closest_sprite[0] == "Enemy":
+            self.seek_enemy(closest_sprite[1])
+            closest_sprite[1] = [TILESIZE * i for i in closest_sprite[1]]
+            self.go_to_coin(closest_sprite[1])
+
+
+        if closest_sprite == 0:
+            self.current_state = self.explore
+
+
+    def get_closest_sprite(self):
+
+        closest_coin = self.get_closest_coin()
+        closest_enemy = self.get_closest_enemy()
+
+        closest_coin_relative = abs(int(self.x/TILESIZE) - int(closest_coin[0] / TILESIZE)) +\
+                                abs(int(self.y/TILESIZE) - int(closest_coin[1] / TILESIZE))
+
+        closest_enemy_relative = abs(int(self.x/TILESIZE) - closest_enemy[0]) +\
+                                 abs(int(self.y/TILESIZE) - closest_enemy[1])
+
+        if closest_coin_relative < closest_enemy_relative:
+            return ["Coin", closest_coin]
+
+        elif closest_coin_relative > closest_enemy_relative:
+            return ["Enemy", closest_enemy]
+
+        elif closest_coin_relative == closest_enemy_relative:
+            return random.choice([["Coin", closest_coin], ["Enemy", closest_enemy]])
+
+        else:
+            return 0
+
+"""
+        if abs(int(closest_coin[0] / TILESIZE)) + abs(int(closest_coin[1] / TILESIZE)) < abs(closest_enemy[0]) + abs(closest_enemy[1]):
+            return ["Coin", closest_coin]
+
+        elif abs(int(closest_coin[0] / TILESIZE)) + abs(int(closest_coin[1] / TILESIZE)) > abs(closest_enemy[0]) + abs(closest_enemy[1]):
+            return ["Enemy", closest_enemy]
+
+        elif abs(int(closest_coin[0] / TILESIZE)) + abs(int(closest_coin[1] / TILESIZE)) == abs(closest_enemy[0]) + abs(closest_enemy[1]):
+            return random.choice([["Coin", closest_coin], ["Enemy", closest_enemy]])
+
+        else:
+            return 0
+"""

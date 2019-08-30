@@ -56,7 +56,7 @@ def astar(maze, start, end):
                 path.append(current.position)
                 current = current.parent
             return path[::-1] # Return reversed path
-
+        print("wtf")
         # Generate children
         children = []
         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]: # Adjacent squares
@@ -68,7 +68,7 @@ def astar(maze, start, end):
                 continue
 
             # Make sure walkable terrain
-            if maze[node_position[0]][node_position[1]] == "W" or maze[node_position[0]][node_position[1]] == "E":
+            if maze[node_position[0]][node_position[1]] == "W":
                 continue
 
             # If safe - create new node

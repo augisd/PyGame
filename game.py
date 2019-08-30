@@ -30,7 +30,8 @@ class Game:
         self.map = Map(self)
         #self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.player_model = PlayerModel(self)

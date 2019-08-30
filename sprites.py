@@ -117,7 +117,6 @@ class Wall(pg.sprite.Sprite):
 class Bullet(pg.sprite.Sprite):
     def __init__(self, game, x, y, fired_by_player=True):
         self.fired_by_player = fired_by_player
-
         if self.fired_by_player:
             self.groups = game.all_sprites, game.bullets
         elif not self.fired_by_player:
