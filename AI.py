@@ -154,6 +154,7 @@ class ExplorerBot(BaseBot):
         self.vx = PLAYER_SPEED * (next_move[1] - start_x)
         self.vy = PLAYER_SPEED * (next_move[0] - start_y)
 
+
 class KillerBot(BaseBot):
     def explore(self):
         if "E" in self.get_screen_objects():
@@ -215,10 +216,10 @@ class KillerBot(BaseBot):
 
             else:
 
-                if distance_y > 5:
+                if distance_y > 10:
                     self.vy = -PLAYER_SPEED
 
-                elif distance_y < -5:
+                elif distance_y < -10:
                     self.vy = PLAYER_SPEED
 
                 else:
@@ -241,10 +242,10 @@ class KillerBot(BaseBot):
 
             else:
 
-                if distance_x > 5:
+                if distance_x > 10:
                     self.vx = -PLAYER_SPEED
 
-                elif distance_x < -5:
+                elif distance_x < -10:
                     self.vx = PLAYER_SPEED
 
                 else:
@@ -256,4 +257,13 @@ class KillerBot(BaseBot):
                     if distance_x < 0:
                         if not self.game.bullets:
                             self.shoot("RIGHT")
+
+
+class ScorerBot(BaseBot):
+
+    def explore(self):
+        if "C" in self.get_screen_objects():
+            self.current_state = self.collect_coins
+        # Move the player sprite around
+        self.move_around()
 
