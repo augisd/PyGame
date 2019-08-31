@@ -201,47 +201,43 @@ class KillerBot(BaseBot):
         distance_y_abs = abs(distance[0])
         distance_x_abs = abs(distance[1])
 
-        if distance_y_abs < distance_x_abs:
-            target_parallel = (start_y, target_x)
+        if start[0] == target[0]:
 
-        elif distance_y_abs > distance_x_abs:
-            target_parallel = (target_y, start_x)
+            self.vx = 0
+            self.vy = 0
 
-        elif distance_y_abs == distance_x_abs:
-            target_parallel = random.choice([(target_y, start_x), (start_y, target_x)])
+            if distance[1] < 0:
+                if len(self.game.bullets) < 1:
+                    self.shoot("RIGHT")
 
-        grid = self.game.map.grid
+            elif distance[1] > 0:
+                if len(self.game.bullets) < 1:
+                    self.shoot("LEFT")
 
-        path = astar(grid, start, target_parallel)
-        print(path)
-        if len(path) == 1:
-            next_move = path[0]
+        elif start[1] == target[1]:
+
+            self.vx = 0
+            self.vy = 0
+
+            if distance[0] < 0:
+                if len(self.game.bullets) < 1:
+                    self.shoot("DOWN")
+
+            elif distance[0] > 0:
+                if len(self.game.bullets) < 1:
+                    self.shoot("UP")
+
         else:
-            next_move = path[1]
+            grid = self.game.map.grid
 
-        self.vx = PLAYER_SPEED * (next_move[1] - start_x)
-        self.vy = PLAYER_SPEED * (next_move[0] - start_y)
+            path = astar(grid, start, target)
+            if len(path) == 1:
+                next_move = path[0]
+            else:
+                next_move = path[1]
 
-        if distance[0] == 0 and distance[1] < 0:
-            self.vx = 0
-            if len(self.game.bullets) < 1:
-                self.shoot("RIGHT")
-
-        elif distance[0] == 0 and distance[1] > 0:
-            self.vx = 0
-            if len(self.game.bullets) < 1:
-                self.shoot("LEFT")
-
-        elif distance[1] == 0 and distance[0] < 0:
-            self.vy = 0
-            if len(self.game.bullets) < 1:
-                self.shoot("DOWN")
-
-        elif distance[1] == 0 and distance[0] > 0:
-            self.vy = 0
-            if len(self.game.bullets) < 1:
-                self.shoot("LEFT")
-
+            self.vx = PLAYER_SPEED * (next_move[1] - start_x)
+            self.vy = PLAYER_SPEED * (next_move[0] - start_y)
 
 """
         target_x = coord[0]
@@ -334,8 +330,8 @@ class ScorerBot(ExplorerBot, KillerBot):
 
         if closest_sprite[0] == "Enemy":
             self.seek_enemy(closest_sprite[1])
-            closest_sprite[1] = [TILESIZE * i for i in closest_sprite[1]]
-            self.go_to_coin(closest_sprite[1])
+            #closest_sprite[1] = [TILESIZE * i for i in closest_sprite[1]]
+            #self.go_to_coin(closest_sprite[1])
 
 
         if closest_sprite == 0:
