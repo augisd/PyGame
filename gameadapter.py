@@ -1,6 +1,36 @@
 from settings import *
 from playermodel import *
 
+class GameAdapterBot:
+    """goal of this class is to track performance of the bots. tendency is tracker is
+        the same as that of the player, while skill is increased automatically """
+    def __init__(self, game, bot_model):
+        self.game = game
+        self.bot_model = bot_model
+
+    def adapt_tendency(self):
+
+        # Explorer
+        self.game.map.n_coins = self.bot_model.explorer.tendency + N_COINS
+
+        if self.bot_model.explorer.tendency > self.bot_model.explorer.previous_tendency:
+            self.game.map.reveal_walls(int(self.bot_model.explorer.tendency))
+
+
+        # Killer
+        # To be implemented
+
+    def adapt_skill(self):
+
+        # Explorer
+        self.game.map.coin_spawn_distance = self.bot_model.explorer.skill + SPAWN_DIST_COINS
+
+        # Killer
+        # To be implemented
+
+    def update(self):
+        self.adapt_tendency()
+        self.adapt_skill()
 
 class GameAdapter:
     def __init__(self, game, player_model):
@@ -26,15 +56,8 @@ class GameAdapter:
         if self.game.map.coin_spawn_distance > MAPGRIDWIDTH - 30:
             self.game.map.coin_spawn_distance = MAPGRIDWIDTH - 30
 
-
     def adapt_killer_tendency(self):
         self.game.map.n_enemies = int(self.player_model.killer.tendency + N_ENEMIES)
-
-        #for enemy in self.game.enemies:
-        #    new_state = self.player_model.killer.tendency // 10
-        #    if new_state > 3:
-        #        new_state = 3
-        #    enemy.state = new_state
 
     def adapt_killer_skill(self):
         bot_delay = (self.player_model.killer.skill / 10)

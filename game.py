@@ -1,4 +1,5 @@
 import pygame as pg
+import pandas as pd
 from sprites import *
 from settings import *
 from AI import *
@@ -34,8 +35,11 @@ class Game:
         #self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
-        self.player_model = PlayerModel(self)
-        self.game_adapter = GameAdapter(self, self.player_model)
+        #self.player_model = PlayerModel(self)
+        self.player_model = BotModel(self)
+        self.game_adapter = GameAdapterBot(self, self.player_model)
+        #self.game_adapter = GameAdapter(self, self.player_model)
+        self.data_coll = ExplorerDataCollector(self)
 
     def run(self):
         while self.playing:
@@ -53,6 +57,7 @@ class Game:
         self.player_model.update()
         self.game_adapter.update()
         self.map.update()
+        self.data_coll.update()
 
 
     def events(self):
@@ -84,8 +89,7 @@ class Game:
                 if event.key == pg.K_x:
                     self.map.spawn_sprite2(Coin)
                 if event.key == pg.K_p:
-                    for wall in self.walls:
-                        print(wall.rect)
+                    self.data_coll.get_frame()
 
     def render(self):
         self.screen.fill(SCREEN_COL)
@@ -101,5 +105,63 @@ class Game:
 
         for y in range(0, SCREEN_HEIGHT, TILESIZE):
             pg.draw.line(self.screen, GRIDLINE_COL, (0, y), (SCREEN_WIDTH, y))
+
+
+class DataCollector():
+    def __init__(self, game):
+        self.game = game
+        self.data = {}
+        self.data_frame = 0
+
+    def add_data_to_frame(self):
+        self.data_frame = pd.DataFrame(self.data)
+
+    def data_frame_to_csv(self, name):
+        self.data_frame.to_csv(name)
+
+    def get_frame(self):
+        print(self.data_frame)
+        return self.data_frame
+
+class ExplorerDataCollector(DataCollector):
+    def __init__(self, game):
+        DataCollector.__init__(self, game)
+
+        # Data frame variables
+        self.playing_time = 0
+        self.coins_collected = 0
+        self.tendency = 0
+        self.skill = 0
+        self.data = {"TIME" : [0], "COINS" : [0], "TENDENCY" : [0], "SKILL" : [0]}
+        self.data_frame = pd.DataFrame()
+        self.start_time = time.perf_counter()
+        self.update_start_time = time.perf_counter()
+
+
+    def update(self):
+        self.end_time = time.perf_counter()
+        self.playing_time = round(self.end_time - self.start_time, 2)
+        self.update_end_time = time.perf_counter()
+        self.update_time = self.update_end_time - self.update_start_time
+
+        if self.update_time > 1:
+            self.coins_collected = self.game.player.coins_collected
+            self.tendency = self.game.player_model.explorer.tendency
+            self.skill = self.game.player_model.explorer.skill
+
+            self.data = { "TIME" : [self.playing_time],
+                          "COINS" : [self.coins_collected],
+                          "TENDENCY" : [self.tendency],
+                          "SKILL" : [self.skill] }
+
+            self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
+            print(self.data_frame)
+
+            self.update_start_time = time.perf_counter()
+
+
+        #self.data_frame.append(pd.DataFrame(self.data))
+        #print(self.data_frame)
+
 
 

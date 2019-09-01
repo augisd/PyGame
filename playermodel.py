@@ -5,6 +5,58 @@ from settings import *
 import time
 import pandas as pd
 
+class BotType():
+    def __init__(self, game):
+        self.game = game
+        self.tendency = 1
+        self.skill = 1
+
+        self.previous_tendency = 1
+        self.previous_skill = 1
+
+        self.skill_increment = 1
+        self.tendency_increment = 1
+
+    def increase_tendency(self):
+        self.tendency += self.tendency_increment
+
+    def increase_skill(self):
+        self.skill += self.skill_increment
+
+    def update_tendency(self):
+        pass
+
+    def update_skill(self):
+        pass
+
+    def update(self):
+        self.update_tendency()
+        self.update_skill()
+
+class ExplorerBotType(BotType):
+    def __init__(self, game):
+        BotType.__init__(self, game)
+        self.start_time = time.perf_counter()
+        self.coins_collected = 0
+        self.coins_collected_previous = 0
+        self.coins_streak = 0
+
+    def update_tendency(self):
+        if self.coins_collected_previous < self.coins_collected:
+            self.coins_streak += 1
+
+        if self.coins_streak >= 5:
+            self.previous_tendency = self.tendency
+            self.increase_tendency()
+            self.coins_streak = 0
+
+        self.coins_collected_previous = self.coins_collected
+        self.coins_collected = self.game.player.coins_collected
+
+    def update_skill(self):
+        if len(self.game.coins) < 1:
+            self.increase_skill()
+
 
 class PlayerType():
 
@@ -16,12 +68,6 @@ class PlayerType():
         self.skill_decrement = -0.001
         self.tendency_increment = 1
         self.skill_increment = 1
-
-        # Variables for skill data collection and calculation
-        self.skill_data = {"n_coins" : [], "dist" : [], "time" : []}
-        self.skill_data_csv = pd.read_csv('test_data.csv')
-        #del self.skill_data_csv["Unnamed: 0"]
-        #print(self.skill_data_csv)
 
         self.tendency_timer_start = 0
         self.tendency_timer_end = 0
@@ -151,13 +197,6 @@ class Explorer(PlayerType):
                     self.decrease_skill()
                     self.skill_decrease_flag = False
 
-                # Write skill data to CSV
-                self.skill_data["n_coins"].append(self.skill_coin_streak)
-                self.skill_data["dist"].append(self.game.map.coin_spawn_distance)
-                self.skill_data["time"].append(self.skill_timer)
-                self.skill_data_csv = self.skill_data_csv.append(pd.DataFrame(self.skill_data).tail(1))
-                self.skill_data_csv.to_csv("test_data.csv", index=False)
-
                 self.skill_coin_streak = 0
 
         # Else, start new streak and skill timer
@@ -165,19 +204,6 @@ class Explorer(PlayerType):
             self.skill_coin_streak += 1
             self.skill_timer_start = time.perf_counter()
 
-        # Scale spawn distance with skill
-        #self.game.map.coin_spawn_distance = (int(self.skill) * 2 // 10) + SPAWN_DIST_COINS
-
-        # 1. Number of coins collected
-        #self.coins_collected = self.game.player.coins_collected
-
-        # 2. Percentage of Map explored
-        #self.percentage_map_explored = self.game.map.percentage_map_explored
-
-        # Get time played
-        #self.end_time = time.perf_counter()
-        #self.time_elapsed = self.end_time - self.start_time
-        #self.skill = 100 * self.coins_collected * self.percentage_map_explored / (self.time_elapsed * 0.5)
         # Update coin collection
         self.coins_collected_previous = self.coins_collected
         self.coins_collected = self.game.player.coins_collected
@@ -291,19 +317,16 @@ class Scorer(PlayerType):
 
         # Coins cleared
         if len(self.game.coins) == 0:
-            print("coins cleared")
             self.coins_cleared_flag = True
             self.coins_cleared_streak += 1
 
         # Enemies cleared
         if len(self.game.enemies) == 0:
-            print("enemies cleared")
             self.enemies_cleared_flag = True
             self.enemies_cleared_streak += 1
 
         # If both cleared - increase scorer tendency
         if self.coins_cleared_flag and self.enemies_cleared_flag:
-            print("increasing scorer tendency")
             self.increase_tendency()
             self.enemies_cleared_flag = False
             self.coins_cleared_flag = False
@@ -336,6 +359,16 @@ class PlayerModel():
         self.explorer.update()
         self.killer.update()
         self.scorer.update()
+
+class BotModel():
+    def __init__(self, game):
+        self.explorer = ExplorerBotType(game)
+
+    def update(self):
+        self.explorer.update()
+
+
+
 
 
 
