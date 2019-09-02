@@ -35,10 +35,11 @@ class Game:
         #self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
-        self.player_model = PlayerModel(self)
-        #self.player_model = BotModel(self)
-        #self.game_adapter = GameAdapterBot(self, self.player_model)
-        self.game_adapter = GameAdapter(self, self.player_model)
+
+        self.player_model = BotModel(self)
+        self.game_adapter = GameAdapterBot(self, self.player_model)
+        #self.player_model = PlayerModel(self)
+        #self.game_adapter = GameAdapter(self, self.player_model)
         self.data_coll = ExplorerDataCollector(self)
 
     def run(self):
