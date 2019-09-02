@@ -67,7 +67,7 @@ def astar(maze, start, end):
                 continue
 
             # Make sure walkable terrain
-            if maze[node_position[0]][node_position[1]] == "W":
+            if maze[node_position[0]][node_position[1]] == "W" or maze[node_position[0]][node_position[1]] == "E":
                 continue
 
             # If safe - create new node

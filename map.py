@@ -34,7 +34,7 @@ class Map:
         self.player_row = int(MAPGRIDHEIGHT / 2)
         self.player_col = int(MAPGRIDWIDTH / 2)
 
-        random.seed(12)
+        random.seed(14)
         self.create_map()
 
     def update(self):

@@ -23,7 +23,7 @@ class GameAdapterBot:
     def adapt_skill(self):
 
         # Explorer
-        self.game.map.coin_spawn_distance = self.bot_model.explorer.skill + SPAWN_DIST_COINS
+        self.game.map.coin_spawn_distance = self.bot_model.explorer.skill * 2 + SPAWN_DIST_COINS
 
         # Killer
         # To be implemented

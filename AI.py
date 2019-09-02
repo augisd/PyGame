@@ -17,7 +17,7 @@ class BaseBot(Player, pg.sprite.Sprite):
         self.steps_to_take = random.randint(TILESIZE, self.max_steps)
         self.steps_taken = 0
         self.current_state = self.explore
-        self.path = 0
+        self.path = []
 
     def explore(self):
         # Move the player sprite around
@@ -148,14 +148,22 @@ class ExplorerBot(BaseBot):
         start = (start_y, start_x)
         grid = self.game.map.grid
         # (row, col)
-        self.path = astar(grid, start, target)
-        print(self.path)
-        if len(self.path) == 1:
+        #print(self.path)
+        if self.path:
+
             next_move = self.path[0]
+
+            self.path = self.path[1:]
+
+        #if len(self.path) == 1:
+        #    next_move = self.path[0]
+        #else:
+        #    next_move = self.path[1]
+            self.vx = PLAYER_SPEED * (next_move[1] - start_x)
+            self.vy = PLAYER_SPEED * (next_move[0] - start_y)
+
         else:
-            next_move = self.path[1]
-        self.vx = PLAYER_SPEED * (next_move[1] - start_x)
-        self.vy = PLAYER_SPEED * (next_move[0] - start_y)
+            self.path = astar(grid, start, target)
 
 
 class KillerBot(BaseBot):
