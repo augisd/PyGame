@@ -1,10 +1,15 @@
 from game import Game
 import pygame as pg
+import cProfile
+import re
 
-g = Game()
-temp = 0
-while g.running:
-    g.new_game()
-    g.run()
+def main():
+    g = Game()
+    temp = 0
+    while g.running:
+        g.new_game()
+        g.run()
 
-pg.quit()
+    pg.quit()
+
+main()

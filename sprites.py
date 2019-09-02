@@ -8,7 +8,7 @@ class Player(pg.sprite.Sprite):
         self.groups = game.all_sprites
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = pg.Surface((TILESIZE, TILESIZE)).convert()
         self.image.fill((PLAYER_COL))
         self.rect = self.image.get_rect()
         self.x = x * TILESIZE
@@ -105,7 +105,7 @@ class Wall(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.walls
         pg.sprite.Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = pg.Surface((TILESIZE, TILESIZE)).convert()
         self.image.fill(WALL_COL)
         self.rect = self.image.get_rect()
         self.x = x
@@ -124,7 +124,7 @@ class Bullet(pg.sprite.Sprite):
 
         self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
-        self.image = pg.Surface((3, 3))
+        self.image = pg.Surface((3, 3)).convert()
 
         if self.fired_by_player:
             self.image.fill(BULLET_COL)
@@ -163,7 +163,7 @@ class Coin(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.coins
         self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
-        self.image = pg.Surface((TILESIZE / 2, TILESIZE / 2))
+        self.image = pg.Surface((TILESIZE / 2, TILESIZE / 2)).convert()
         self.image.fill(COIN_COL)
         self.rect = self.image.get_rect()
         self.x = x * TILESIZE
@@ -177,7 +177,7 @@ class Enemy(pg.sprite.Sprite):
         self.groups = game.all_sprites, game.enemies
         self.game = game
         pg.sprite.Sprite.__init__(self, self.groups)
-        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = pg.Surface((TILESIZE, TILESIZE)).convert()
         self.image.fill(ENEMY_COL)
         self.rect = self.image.get_rect()
         self.hp = 10

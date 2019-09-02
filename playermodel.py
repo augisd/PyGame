@@ -20,6 +20,9 @@ class BotType():
     def increase_tendency(self):
         self.tendency += self.tendency_increment
 
+        if self.tendency > 100:
+            self.tendency = 100
+
     def increase_skill(self):
         self.skill += self.skill_increment
 
@@ -44,6 +47,8 @@ class ExplorerBotType(BotType):
     def update_tendency(self):
         if self.coins_collected_previous < self.coins_collected:
             self.coins_streak += 1
+
+
 
         if self.coins_streak >= 5:
             self.previous_tendency = self.tendency

@@ -35,25 +35,29 @@ class Game:
         #self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
-        #self.player_model = PlayerModel(self)
-        self.player_model = BotModel(self)
-        self.game_adapter = GameAdapterBot(self, self.player_model)
-        #self.game_adapter = GameAdapter(self, self.player_model)
+        self.player_model = PlayerModel(self)
+        #self.player_model = BotModel(self)
+        #self.game_adapter = GameAdapterBot(self, self.player_model)
+        self.game_adapter = GameAdapter(self, self.player_model)
         self.data_coll = ExplorerDataCollector(self)
 
     def run(self):
         while self.playing:
             self.dt = self.clock.tick(FPS) / 1000
             self.events()
-            self.update()
-            self.render()
 
+            self.update()
+            #debug_time_start = time.perf_counter()
+            self.render()
+            #debug_time_end = time.perf_counter()
+            #print(debug_time_end - debug_time_start)
     def update(self):
 
         self.player.update()
         self.all_sprites.update()
         self.camera.update(self.player)
         # Update player model tendencies before respawning sprites
+
         self.player_model.update()
         self.game_adapter.update()
         self.map.update()
@@ -120,7 +124,6 @@ class DataCollector():
         self.data_frame.to_csv(name)
 
     def get_frame(self):
-        print(self.data_frame)
         return self.data_frame
 
 class ExplorerDataCollector(DataCollector):
@@ -144,6 +147,9 @@ class ExplorerDataCollector(DataCollector):
         self.update_end_time = time.perf_counter()
         self.update_time = self.update_end_time - self.update_start_time
 
+        if self.skill == 50:
+            self.data_frame_to_csv("explorer_bot_data.csv")
+
         if self.update_time > 1:
             self.coins_collected = self.game.player.coins_collected
             self.tendency = self.game.player_model.explorer.tendency
@@ -155,7 +161,6 @@ class ExplorerDataCollector(DataCollector):
                           "SKILL" : [self.skill] }
 
             self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
-            print(self.data_frame)
 
             self.update_start_time = time.perf_counter()
 
