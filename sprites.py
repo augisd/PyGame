@@ -170,7 +170,6 @@ class Coin(pg.sprite.Sprite):
         self.y = y * TILESIZE
         self.rect.centerx = self.x + TILESIZE / 2
         self.rect.centery = self.y + TILESIZE / 2
-        print("spawning coin at: ", y, x)
 
 
 class Enemy(pg.sprite.Sprite):

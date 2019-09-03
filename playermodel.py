@@ -48,8 +48,6 @@ class ExplorerBotType(BotType):
         if self.coins_collected_previous < self.coins_collected:
             self.coins_streak += 1
 
-
-
         if self.coins_streak >= 5:
             self.previous_tendency = self.tendency
             self.increase_tendency()

@@ -149,6 +149,7 @@ class ExplorerBot(BaseBot):
         grid = self.game.map.grid
         # (row, col)
         #print(self.path)
+        print(self.path)
         if self.path:
 
             next_move = self.path[0]

@@ -13,7 +13,8 @@ class GameAdapterBot:
         # Explorer
         self.game.map.n_coins = self.bot_model.explorer.tendency + N_COINS
 
-        if self.bot_model.explorer.tendency > self.bot_model.explorer.previous_tendency:
+        if (self.bot_model.explorer.tendency > self.bot_model.explorer.previous_tendency and
+            self.bot_model.explorer.tendency < 50):
             self.game.map.reveal_walls(int(self.bot_model.explorer.tendency))
 
 
@@ -23,7 +24,8 @@ class GameAdapterBot:
     def adapt_skill(self):
 
         # Explorer
-        self.game.map.coin_spawn_distance = self.bot_model.explorer.skill * 2 + SPAWN_DIST_COINS
+        self.game.map.coin_spawn_distance = self.bot_model.explorer.skill + SPAWN_DIST_COINS
+        print(self.bot_model.explorer.skill)
 
         # Killer
         # To be implemented
@@ -40,15 +42,15 @@ class GameAdapter:
     def adapt_explorer_tendency(self):
         self.game.map.n_coins = self.player_model.explorer.tendency + N_COINS
         #self.game.map.wall_range = int(self.player_model.explorer.tendency)
-
-        if self.player_model.explorer.tendency > self.player_model.explorer.previous_tendency:
+        """
+        if self.player_model.explorer.tendency > self.player_model.explorer.previous_tendency and self.player_model.explorer.tendency < 100:
             #self.game.map.grid = self.game.map.make_grid()
             self.game.map.reveal_walls(int(self.player_model.explorer.tendency))
 
-        if self.player_model.explorer.tendency < self.player_model.explorer.previous_tendency:
+        if self.player_model.explorer.tendency < self.player_model.explorer.previous_tendency and self.player_model.explorer.tendency > 0:
             #self.game.map.grid = self.game.map.make_grid()
             self.game.map.hide_walls(int(round(self.player_model.explorer.tendency)))
-
+        """
         self.player_model.explorer.previous_tendency = self.player_model.explorer.tendency
 
     def adapt_explorer_skill(self):

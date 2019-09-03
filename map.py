@@ -34,7 +34,7 @@ class Map:
         self.player_row = int(MAPGRIDHEIGHT / 2)
         self.player_col = int(MAPGRIDWIDTH / 2)
 
-        random.seed(14)
+        random.seed(13)
         self.create_map()
 
     def update(self):
@@ -221,8 +221,8 @@ class Map:
     def fill_map(self, walls_grid):
         for row in range(len(walls_grid)):
             for col in range(len(walls_grid[0])):
-                #if walls_grid[row][col] == "W":
-                #    Wall(self.game, col, row)
+                if walls_grid[row][col] == "W":
+                    Wall(self.game, col, row)
                 if walls_grid[row][col] == "C":
                     Coin(self.game, col, row)
                 if walls_grid[row][col] == "E":
