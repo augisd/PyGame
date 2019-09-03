@@ -12,11 +12,11 @@ class GameAdapterBot:
 
         # Explorer
         self.game.map.n_coins = self.bot_model.explorer.tendency + N_COINS
-
+        """
         if (self.bot_model.explorer.tendency > self.bot_model.explorer.previous_tendency and
             self.bot_model.explorer.tendency < 50):
             self.game.map.reveal_walls(int(self.bot_model.explorer.tendency))
-
+        """
 
         # Killer
         # To be implemented
@@ -25,7 +25,6 @@ class GameAdapterBot:
 
         # Explorer
         self.game.map.coin_spawn_distance = self.bot_model.explorer.skill + SPAWN_DIST_COINS
-        print(self.bot_model.explorer.skill)
 
         # Killer
         # To be implemented

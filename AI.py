@@ -65,17 +65,17 @@ class BaseBot(Player, pg.sprite.Sprite):
 
     def update(self):
         # Pickup coin
-        #self.game.clock.tick(BOT_DELAY)
-        self.vx = 0
-        self.vy = 0
+        self.game.clock.tick(BOT_DELAY)
+        #self.vx = 0
+        #self.vy = 0
         self.current_state()
         #self.coin_picked_up = False
         if pg.sprite.spritecollide(self, self.game.coins, True):
             self.coins_collected += 1
             #self.coin_picked_up = True
 
-        self.x += self.vx * self.game.dt
-        self.y += self.vy * self.game.dt
+        self.x += self.vx #* self.game.dt
+        self.y += self.vy #* self.game.dt
 
         if self.x < 0:
             self.x = 0
@@ -143,28 +143,24 @@ class ExplorerBot(BaseBot):
         target_y = int(coord[1] / TILESIZE)
         target = (target_y, target_x)
 
-        start_x = int(self.x / TILESIZE)
-        start_y = int(self.y / TILESIZE)
-        start = (start_y, start_x)
-        grid = self.game.map.grid
+        current_x = int(self.x / TILESIZE)
+        current_y = int(self.y / TILESIZE)
+        current = (current_y, current_x)
+
         # (row, col)
-        #print(self.path)
-        print(self.path)
-        if self.path:
-
-            next_move = self.path[0]
-
-            self.path = self.path[1:]
-
-        #if len(self.path) == 1:
-        #    next_move = self.path[0]
-        #else:
-        #    next_move = self.path[1]
-            self.vx = PLAYER_SPEED * (next_move[1] - start_x)
-            self.vy = PLAYER_SPEED * (next_move[0] - start_y)
+        if len(self.path) == 0:
+            start_x = int(self.x / TILESIZE)
+            start_y = int(self.y / TILESIZE)
+            start = (start_y, start_x)
+            grid = self.game.map.grid
+            self.path = astar(grid, start, target)
 
         else:
-            self.path = astar(grid, start, target)
+            next_move = self.path[0]
+            self.vx = PLAYER_SPEED * (next_move[1] - current_x)
+            self.vy = PLAYER_SPEED * (next_move[0] - current_y)
+            self.path = self.path[1:]
+
 
 
 class KillerBot(BaseBot):
