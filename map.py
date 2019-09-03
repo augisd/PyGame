@@ -27,7 +27,8 @@ class Map:
         self.map_percentage_revealed = 0.5
         self.n_walls = 0
         self.walls = 0
-
+        self.wall_dict = {}
+        self.wall_dict_flags= {}
 
         # Initial player position (to be used for spawning sprites
         # around player):
@@ -93,7 +94,32 @@ class Map:
         #        Wall(self.game, wall[1], wall[0])
         #        self.wall_coordinates.remove(wall)
 
-    def reveal_walls(self, length):
+    def get_incremental_wall_coordinates(self, length):
+
+        #coordinates = {}
+        coordinates_to_add = []
+
+        for col_index in range(-length, length + 1, 1):
+
+            if self.walls[self.player_row - length][self.player_col + col_index] == "W":
+                coordinates_to_add.append([self.player_row - length, self.player_col + col_index])
+
+            if self.walls[self.player_row + length][self.player_col + col_index] == "W":
+                coordinates_to_add.append([self.player_row + length, self.player_col + col_index])
+
+        # Left + right cols
+        for row_index in range(-length + 1, length, 1):
+
+            if self.walls[self.player_row + row_index][self.player_col - length] == "W":
+                coordinates_to_add.append([self.player_row + row_index, self.player_col - length])
+
+            if self.walls[self.player_row + row_index][self.player_col + length] == "W":
+                coordinates_to_add.append([self.player_row + row_index, self.player_col + length])
+
+        #coordinates[length] = coordinates_to_add
+        return coordinates_to_add
+
+    def reveal_walls2(self, length):
         # Top and bottom rows
         for col_index in range(-length, length + 1, 1):
 
@@ -111,6 +137,11 @@ class Map:
 
             if self.walls[self.player_row + row_index][self.player_col + length] == "W":
                 Wall(self.game, self.player_col + length, self.player_row + row_index)
+
+    def reveal_walls(self, length):
+
+        for wall in self.wall_dict[length]:
+            Wall(self.game, wall[1], wall[0])
 
     def hide_walls(self, length):
 
@@ -135,6 +166,15 @@ class Map:
         # including player sprite starting position
         self.grid_walls_only = self.walls
         self.grid = deepcopy(self.walls)
+
+
+
+        # get coordinate list of wall locations:
+        for wall_index in range(1, 100):
+            wall_coords = self.get_incremental_wall_coordinates(wall_index)
+            self.wall_dict[wall_index] = wall_coords
+            self.wall_dict_flags[wall_index] = False
+
 
         # Next, determine initial spawn locations for coin
         # and enemy sprites
@@ -221,8 +261,8 @@ class Map:
     def fill_map(self, walls_grid):
         for row in range(len(walls_grid)):
             for col in range(len(walls_grid[0])):
-                if walls_grid[row][col] == "W":
-                    Wall(self.game, col, row)
+                #if walls_grid[row][col] == "W":
+                #    Wall(self.game, col, row)
                 if walls_grid[row][col] == "C":
                     Coin(self.game, col, row)
                 if walls_grid[row][col] == "E":

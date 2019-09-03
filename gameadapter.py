@@ -7,6 +7,7 @@ class GameAdapterBot:
     def __init__(self, game, bot_model):
         self.game = game
         self.bot_model = bot_model
+        self.walls_revealed = {1 : False}
 
     def adapt_tendency(self):
 
@@ -17,7 +18,12 @@ class GameAdapterBot:
             self.bot_model.explorer.tendency < 50):
             self.game.map.reveal_walls(int(self.bot_model.explorer.tendency))
         """
+        if (self.bot_model.explorer.tendency > self.bot_model.explorer.previous_tendency and
+            self.bot_model.explorer.tendency < 50 and
+            not self.game.map.wall_dict_flags[int(self.bot_model.explorer.tendency)]):
 
+            self.game.map.reveal_walls(int(self.bot_model.explorer.tendency))
+            self.game.map.wall_dict_flags[int(self.bot_model.explorer.tendency)] = True
         # Killer
         # To be implemented
 
@@ -25,6 +31,7 @@ class GameAdapterBot:
 
         # Explorer
         self.game.map.coin_spawn_distance = self.bot_model.explorer.skill + SPAWN_DIST_COINS
+        print(self.bot_model.explorer.skill)
 
         # Killer
         # To be implemented
