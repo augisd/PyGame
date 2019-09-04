@@ -37,7 +37,6 @@ def astar(maze, start, end):
     # Loop until you find the end
     while len(open_list) > 0:
         # Get the current node
-        print("Im stuck")
         current_node = open_list[0]
         current_index = 0
         for index, item in enumerate(open_list):

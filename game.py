@@ -138,7 +138,9 @@ class KillerDataCollector(DataCollector):
         self.playing_time = 0
         self.enemies_killed = 0
         self.tendency = 0
+        self.tendency_previous = 1
         self.skill = 0
+        self.skill_previous = 1
         self.bullets_fired = 0
         self.data = {"TIME" : [0],
                      "ENEMIES" : [0],
@@ -154,10 +156,26 @@ class KillerDataCollector(DataCollector):
         self.playing_time = round(self.end_time - self.start_time, 2)
         self.update_end_time = time.perf_counter()
         self.update_time = self.update_end_time - self.update_start_time
-
+        print(self.skill)
         if self.skill == 20:
             self.data_frame_to_csv("killer_bot_data.csv")
 
+        if self.skill > self.skill_previous or self.tendency > self.tendency_previous:
+            self.enemies_killed = self.game.player.enemies_killed
+            self.bullets_fired = self.game.player.bullets_fired
+            self.data = {"TIME": [self.playing_time],
+                         "ENEMIES": [self.enemies_killed],
+                         "BULLETS": [self.bullets_fired],
+                         "TENDENCY": [self.tendency],
+                         "SKILL": [self.skill]}
+            self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
+
+        self.skill_previous = self.skill
+        self.tendency_previous = self.tendency
+        self.skill = self.game.player_model.killer.skill
+        self.tendency = self.game.player_model.killer.tendency
+
+        """"
         if self.update_time > 1:
             self.enemies_killed = self.game.player.enemies_killed
             self.bullets_fired = self.game.player.bullets_fired
@@ -173,7 +191,7 @@ class KillerDataCollector(DataCollector):
             self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
 
             self.update_start_time = time.perf_counter()
-
+        """
 
 
 class ExplorerDataCollector(DataCollector):
@@ -183,9 +201,14 @@ class ExplorerDataCollector(DataCollector):
         # Data frame variables
         self.playing_time = 0
         self.coins_collected = 0
-        self.tendency = 0
-        self.skill = 0
-        self.data = {"TIME" : [0], "COINS" : [0], "TENDENCY" : [0], "SKILL" : [0]}
+        self.tendency = self.game.player_model.explorer.tendency
+        self.tendency_previous = 1
+        self.skill = self.game.player_model.explorer.skill
+        self.skill_previous = 1
+        self.data = {"TIME" : [0],
+                     "COINS" : [0],
+                     "TENDENCY" : [0],
+                     "SKILL" : [0]}
         self.data_frame = pd.DataFrame()
         self.start_time = time.perf_counter()
         self.update_start_time = time.perf_counter()
@@ -200,23 +223,15 @@ class ExplorerDataCollector(DataCollector):
         if self.skill == 20:
             self.data_frame_to_csv("explorer_bot_data.csv")
 
-        if self.update_time > 1:
+        if self.skill > self.skill_previous or self.tendency > self.tendency_previous:
             self.coins_collected = self.game.player.coins_collected
-            self.tendency = self.game.player_model.explorer.tendency
-            self.skill = self.game.player_model.explorer.skill
-
-            self.data = { "TIME" : [self.playing_time],
-                          "COINS" : [self.coins_collected],
-                          "TENDENCY" : [self.tendency],
-                          "SKILL" : [self.skill] }
-
+            self.data = {"TIME": [self.playing_time],
+                         "COINS": [self.coins_collected],
+                         "TENDENCY": [self.tendency],
+                         "SKILL": [self.skill]}
             self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
 
-            self.update_start_time = time.perf_counter()
-
-
-        #self.data_frame.append(pd.DataFrame(self.data))
-        #print(self.data_frame)
-
-
-
+        self.skill_previous = self.skill
+        self.tendency_previous = self.tendency
+        self.skill = self.game.player_model.explorer.skill
+        self.tendency = self.game.player_model.explorer.tendency
