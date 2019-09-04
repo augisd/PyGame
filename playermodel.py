@@ -36,6 +36,31 @@ class BotType():
         self.update_tendency()
         self.update_skill()
 
+
+class KillerBotType(BotType):
+    def __init__(self, game):
+        BotType.__init__(self, game)
+        self.start_time = time.perf_counter()
+        self.enemies_killed = 0
+        self.enemies_killed_previous = 0
+        self.enemies_streak = 0
+
+    def update_tendency(self):
+        if self.enemies_killed_previous < self.enemies_killed:
+            self.enemies_streak += 1
+
+        if self.enemies_streak >= 5:
+            self.previous_tendency = self.tendency
+            self.increase_tendency()
+            self.enemies_streak = 0
+
+        self.enemies_killed_previous = self.enemies_killed
+        self.enemies_killed = self.game.player.enemies_killed
+
+    def update_skill(self):
+        if len(self.game.enemies) < 1:
+            self.increase_skill()
+
 class ExplorerBotType(BotType):
     def __init__(self, game):
         BotType.__init__(self, game)
@@ -366,10 +391,11 @@ class PlayerModel():
 class BotModel():
     def __init__(self, game):
         self.explorer = ExplorerBotType(game)
+        self.killer = KillerBotType(game)
 
     def update(self):
         self.explorer.update()
-
+        self.killer.update()
 
 
 

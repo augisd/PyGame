@@ -30,8 +30,8 @@ class Game:
     def new_game(self):
         self.map = Map(self)
         #self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        #self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -40,7 +40,9 @@ class Game:
         self.game_adapter = GameAdapterBot(self, self.player_model)
         #self.player_model = PlayerModel(self)
         #self.game_adapter = GameAdapter(self, self.player_model)
-        self.data_coll = ExplorerDataCollector(self)
+
+        #self.data_coll = ExplorerDataCollector(self)
+        self.data_coll = KillerDataCollector(self)
 
     def run(self):
         while self.playing:
@@ -127,6 +129,53 @@ class DataCollector():
     def get_frame(self):
         return self.data_frame
 
+
+class KillerDataCollector(DataCollector):
+    def __init__(self, game):
+        DataCollector.__init__(self, game)
+
+        # Data frame variables
+        self.playing_time = 0
+        self.enemies_killed = 0
+        self.tendency = 0
+        self.skill = 0
+        self.bullets_fired = 0
+        self.data = {"TIME" : [0],
+                     "ENEMIES" : [0],
+                     "BULLETS" : [0],
+                     "TENDENCY" : [0],
+                     "SKILL" : [0]}
+        self.data_frame = pd.DataFrame()
+        self.start_time = time.perf_counter()
+        self.update_start_time = time.perf_counter()
+
+    def update(self):
+        self.end_time = time.perf_counter()
+        self.playing_time = round(self.end_time - self.start_time, 2)
+        self.update_end_time = time.perf_counter()
+        self.update_time = self.update_end_time - self.update_start_time
+
+        if self.skill == 20:
+            self.data_frame_to_csv("killer_bot_data.csv")
+
+        if self.update_time > 1:
+            self.enemies_killed = self.game.player.enemies_killed
+            self.bullets_fired = self.game.player.bullets_fired
+            self.tendency = self.game.player_model.killer.tendency
+            self.skill = self.game.player_model.killer.skill
+
+            self.data = { "TIME" : [self.playing_time],
+                          "ENEMIES" : [self.enemies_killed],
+                          "BULLETS" : [self.bullets_fired],
+                          "TENDENCY" : [self.tendency],
+                          "SKILL" : [self.skill] }
+
+            self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
+
+            self.update_start_time = time.perf_counter()
+
+
+
 class ExplorerDataCollector(DataCollector):
     def __init__(self, game):
         DataCollector.__init__(self, game)
@@ -148,7 +197,7 @@ class ExplorerDataCollector(DataCollector):
         self.update_end_time = time.perf_counter()
         self.update_time = self.update_end_time - self.update_start_time
 
-        if self.skill == 50:
+        if self.skill == 20:
             self.data_frame_to_csv("explorer_bot_data.csv")
 
         if self.update_time > 1:

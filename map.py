@@ -29,6 +29,7 @@ class Map:
         self.walls = 0
         self.wall_dict = {}
         self.wall_dict_flags= {}
+        self.wall_sprites_dict = {}
 
         # Initial player position (to be used for spawning sprites
         # around player):
@@ -140,10 +141,20 @@ class Map:
 
     def reveal_walls(self, length):
 
+        wall_sprites_list = []
+
         for wall in self.wall_dict[length]:
-            Wall(self.game, wall[1], wall[0])
+            wall = Wall(self.game, wall[1], wall[0])
+            wall_sprites_list.append(wall)
+
+        self.wall_sprites_dict[length] = wall_sprites_list
 
     def hide_walls(self, length):
+
+        for wall in self.wall_sprites_dict[length]:
+            wall.kill()
+
+    def hide_walls2(self, length):
 
         for wall in self.game.walls.sprites():
 

@@ -37,6 +37,7 @@ def astar(maze, start, end):
     # Loop until you find the end
     while len(open_list) > 0:
         # Get the current node
+        print("Im stuck")
         current_node = open_list[0]
         current_index = 0
         for index, item in enumerate(open_list):
@@ -67,7 +68,7 @@ def astar(maze, start, end):
                 continue
 
             # Make sure walkable terrain
-            if maze[node_position[0]][node_position[1]] == "W" or maze[node_position[0]][node_position[1]] == "E":
+            if maze[node_position[0]][node_position[1]] == "W":
                 continue
 
             # If safe - create new node

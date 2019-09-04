@@ -238,6 +238,7 @@ class KillerBot(BaseBot):
             grid = self.game.map.grid
 
             path = astar(grid, start, target)
+            print("here")
             if len(path) == 1:
                 next_move = path[0]
             else:
@@ -339,7 +340,6 @@ class ScorerBot(ExplorerBot, KillerBot):
             self.seek_enemy(closest_sprite[1])
             #closest_sprite[1] = [TILESIZE * i for i in closest_sprite[1]]
             #self.go_to_coin(closest_sprite[1])
-
 
         if closest_sprite == 0:
             self.current_state = self.explore
