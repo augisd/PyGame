@@ -30,8 +30,8 @@ class Game:
     def new_game(self):
         self.map = Map(self)
         #self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -41,31 +41,27 @@ class Game:
         #self.player_model = PlayerModel(self)
         #self.game_adapter = GameAdapter(self, self.player_model)
 
-        #self.data_coll = ExplorerDataCollector(self)
-        self.data_coll = KillerDataCollector(self)
+        self.data_coll = ExplorerDataCollector(self)
+        #self.data_coll = KillerDataCollector(self)
 
     def run(self):
         while self.playing:
             self.dt = self.clock.tick(FPS) / 1000
-            self.events()
 
+            self.events()
             self.update()
-            #debug_time_start = time.perf_counter()
             self.render()
-            #debug_time_end = time.perf_counter()
-            #print(debug_time_end - debug_time_start)
+
     def update(self):
 
         self.player.update()
-        self.all_sprites.update()
-        self.camera.update(self.player)
-        # Update player model tendencies before respawning sprites
 
+        self.all_sprites.update()
         self.player_model.update()
         self.game_adapter.update()
+        self.camera.update(self.player)
         self.map.update()
         self.data_coll.update()
-
 
     def events(self):
         for event in pg.event.get():
@@ -217,19 +213,22 @@ class ExplorerDataCollector(DataCollector):
     def update(self):
         self.end_time = time.perf_counter()
         self.playing_time = round(self.end_time - self.start_time, 2)
-        self.update_end_time = time.perf_counter()
-        self.update_time = self.update_end_time - self.update_start_time
 
-        if self.skill == 20:
-            self.data_frame_to_csv("explorer_bot_data.csv")
+        print("skill ",self.skill)
+        print("tendency ",self.tendency)
+        if self.tendency == 15:
+            self.data_frame_to_csv("explorer_bot_data_skill_tendency.csv")
 
-        if self.skill > self.skill_previous or self.tendency > self.tendency_previous:
+        if self.skill > self.skill_previous: #or self.tendency > self.tendency_previous:
+            self.update_end_time = time.perf_counter()
+            self.update_time = self.update_end_time - self.update_start_time
             self.coins_collected = self.game.player.coins_collected
-            self.data = {"TIME": [self.playing_time],
+            self.data = {"TIME": [self.update_time],
                          "COINS": [self.coins_collected],
                          "TENDENCY": [self.tendency],
                          "SKILL": [self.skill]}
             self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
+            self.update_start_time = time.perf_counter()
 
         self.skill_previous = self.skill
         self.tendency_previous = self.tendency

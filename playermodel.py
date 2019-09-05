@@ -70,6 +70,7 @@ class ExplorerBotType(BotType):
         self.coins_streak = 0
 
     def update_tendency(self):
+        """
         if self.coins_collected_previous < self.coins_collected:
             self.coins_streak += 1
 
@@ -80,6 +81,10 @@ class ExplorerBotType(BotType):
 
         self.coins_collected_previous = self.coins_collected
         self.coins_collected = self.game.player.coins_collected
+        """
+        if self.skill == 15:
+            self.increase_tendency()
+            self.skill = 1
 
     def update_skill(self):
         if len(self.game.coins) < 1:
@@ -197,14 +202,18 @@ class Explorer(PlayerType):
             #self.game.map.n_coins = self.coins_collected // 10 + N_COINS
 
     def update_skill(self):
-
+        if len(self.game.coins) < 1:
+            print("hello")
         # Calculate skill
+
         # If currently on streak and coin picked up, increase streak by 1
         if self.coin_collected() and self.skill_coin_streak > 0:
             self.skill_coin_streak += 1
 
             # And if picked up coin was the last one on the screen, update the skill
             if self.skill_coin_streak == self.game.map.n_coins:
+
+            #if len(self.game.coins.sprites()) < 1:
                 self.skill_timer_end = time.perf_counter()
                 self.skill_timer = round(self.skill_timer_end - self.skill_timer_start, 1)
 
