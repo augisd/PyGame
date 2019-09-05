@@ -203,7 +203,8 @@ class Explorer(PlayerType):
 
     def update_skill(self):
         if len(self.game.coins) < 1:
-            print("hello")
+            self.skill_timer_end = time.perf_counter()
+            print(self.skill_timer_end - self.skill_timer_start)
         # Calculate skill
 
         # If currently on streak and coin picked up, increase streak by 1
@@ -214,7 +215,7 @@ class Explorer(PlayerType):
             if self.skill_coin_streak == self.game.map.n_coins:
 
             #if len(self.game.coins.sprites()) < 1:
-                self.skill_timer_end = time.perf_counter()
+
                 self.skill_timer = round(self.skill_timer_end - self.skill_timer_start, 1)
 
                 self.time_to_beat = round(self.game.map.n_coins * self.game.map.coin_spawn_distance / 10, 1)
