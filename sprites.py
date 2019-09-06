@@ -20,6 +20,7 @@ class Player(pg.sprite.Sprite):
 
         self.coin_picked_up = False
         self.bullets_fired = 0
+        self.bullets_taken = 0
 
     def update(self):
         # Pickup coin (Bool statements for player model tendency)
@@ -41,11 +42,11 @@ class Player(pg.sprite.Sprite):
         if self.y > MAP_HEIGHT:
             self.y = MAP_HEIGHT
 
-        self.rect.x = int(self.x / TILESIZE) * TILESIZE
-        #self.rect.x = self.x
+        #self.rect.x = int(self.x / TILESIZE) * TILESIZE
+        self.rect.x = self.x
         self.collide_with_walls("x")
-        self.rect.y = int(self.y / TILESIZE) * TILESIZE
-        #self.rect.y = self.y
+        #self.rect.y = int(self.y / TILESIZE) * TILESIZE
+        self.rect.y = self.y
         self.collide_with_walls("y")
 
     def get_keys(self):
@@ -88,6 +89,7 @@ class Player(pg.sprite.Sprite):
                 self.rect.y = self.y
 
     def shoot(self, dir):
+        pg.key.set_repeat(100, 100)
         self.bullets_fired += 1
         bullet = Bullet(self.game, self.rect.centerx, self.rect.centery)
         if dir == "LEFT":
@@ -141,18 +143,15 @@ class Bullet(pg.sprite.Sprite):
             self.rect.left < 0 or
             self.rect.top < 0 or
             self.rect.bottom > MAP_HEIGHT or
-            pg.sprite.spritecollideany(self, self.game.walls) or
-            self.rect.right > self.game.player.rect.centerx + SCREEN_WIDTH / 2 or
-            self.rect.left < self.game.player.rect.centerx - SCREEN_WIDTH / 2 or
-            self.rect.top > self.game.player.rect.centery + SCREEN_HEIGHT / 2 or
-            self.rect.bottom < self.game.player.rect.centery - SCREEN_HEIGHT / 2):
+            pg.sprite.spritecollideany(self, self.game.walls)):
             self.kill()
         # Bullet collision ( fired by player or enemy )
         if self.fired_by_player:
             if pg.sprite.groupcollide(self.game.bullets, self.game.enemies, True, True):
                 self.game.player.enemies_killed += 1
         elif not self.fired_by_player:
-            pg.sprite.spritecollide(self.game.player, self.game.enemy_bullets, True)
+            if pg.sprite.spritecollide(self.game.player, self.game.enemy_bullets, True):
+                self.game.player.bullets_taken += 1
 
         self.rect.centerx += self.speedx
         self.rect.centery += self.speedy

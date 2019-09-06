@@ -43,7 +43,6 @@ def astar(maze, start, end):
             if item.f < current_node.f:
                 current_node = item
                 current_index = index
-
         # Pop current off open list, add to closed list
         open_list.pop(current_index)
         #closed_list.append(current_node)

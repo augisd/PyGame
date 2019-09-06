@@ -29,17 +29,17 @@ class Game:
 
     def new_game(self):
         self.map = Map(self)
-        #self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
+        #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-        self.player_model = BotModel(self)
-        self.game_adapter = GameAdapterBot(self, self.player_model)
-        #self.player_model = PlayerModel(self)
-        #self.game_adapter = GameAdapter(self, self.player_model)
+        #self.player_model = BotModel(self)
+        #self.game_adapter = GameAdapterBot(self, self.player_model)
+        self.player_model = PlayerModel(self)
+        self.game_adapter = GameAdapter(self, self.player_model)
 
         #self.data_coll = ExplorerDataCollector(self)
         #self.data_coll = KillerDataCollector(self)
@@ -54,11 +54,12 @@ class Game:
 
     def update(self):
 
+        self.all_sprites.update()
         self.player.update()
 
-        self.all_sprites.update()
         self.player_model.update()
         self.game_adapter.update()
+
         self.camera.update(self.player)
         self.map.update()
         #self.data_coll.update()
@@ -215,7 +216,7 @@ class ExplorerDataCollector(DataCollector):
         self.playing_time = round(self.end_time - self.start_time, 2)
 
         if self.tendency == 15:
-            self.data_frame_to_csv("explorer_bot_data_skill_tendency.csv")
+            self.data_frame_to_csv("explorer_bot_data_skill_new.csv")
 
         if self.skill > self.skill_previous: #or self.tendency > self.tendency_previous:
             self.update_end_time = time.perf_counter()

@@ -66,8 +66,8 @@ class BaseBot(Player, pg.sprite.Sprite):
     def update(self):
         # Pickup coin
         #self.game.clock.tick(BOT_DELAY)
-        #self.vx = 0
-        #self.vy = 0
+        self.vx = 0
+        self.vy = 0
         self.current_state()
         #self.coin_picked_up = False
         if pg.sprite.spritecollide(self, self.game.coins, True):
@@ -119,23 +119,28 @@ class ExplorerBot(BaseBot):
         #    self.current_state = self.explore
         # Move the player sprite towards the nearest coin
         go_to = self.get_closest_coin()
-        self.go_to_coin(go_to)
+        if go_to:
+            self.go_to_coin(go_to)
+        else:
+            pass
 
     def get_closest_coin(self):
-        if len(self.game.coins.sprites()) == 0:
-            return [self.x, self.y]
+        #if len(self.game.coins.sprites()) == 0:
+        #    return [self.x * TILESIZE, self.y * TILESIZE]
+        if self.game.coins:
+            closest_coin = [self.game.coins.sprites()[0].x,
+                            self.game.coins.sprites()[0].y]
 
-        closest_coin = [self.game.coins.sprites()[0].x,
-                        self.game.coins.sprites()[0].y]
-
-        for coin in self.game.coins.sprites():
-            if (abs(self.x - coin.x) + abs(self.y - coin.y) <
-                    abs(self.x - closest_coin[0]) + abs(self.y - closest_coin[1])):
-                closest_coin = [coin.x, coin.y]
-            elif (abs(self.x - coin.x) + abs(self.y - coin.y) ==
-                    abs(self.x - closest_coin[0]) + abs(self.y - closest_coin[1])):
-                closest_coin = [coin.x, coin.y]
-        return closest_coin
+            for coin in self.game.coins.sprites():
+                if (abs(self.x - coin.x) + abs(self.y - coin.y) <
+                        abs(self.x - closest_coin[0]) + abs(self.y - closest_coin[1])):
+                    closest_coin = [coin.x, coin.y]
+                elif (abs(self.x - coin.x) + abs(self.y - coin.y) ==
+                        abs(self.x - closest_coin[0]) + abs(self.y - closest_coin[1])):
+                    closest_coin = [coin.x, coin.y]
+            return closest_coin
+        else:
+            pass
 
     def go_to_coin(self, coord):
         # coord : [x, y] (pixels)
@@ -155,7 +160,6 @@ class ExplorerBot(BaseBot):
             start = (start_y, start_x)
             grid = self.game.map.grid
             self.path = astar(grid, start, target)
-
         else:
             next_move = self.path[0]
             if current_x == next_move[1] and current_y == next_move[0]:
@@ -206,6 +210,10 @@ class KillerBot(BaseBot):
         start_y = int(self.y / TILESIZE)
         start = (start_y, start_x)
 
+        current_x = int(self.x / TILESIZE)
+        current_y = int(self.y / TILESIZE)
+        current = (current_y, current_x)
+
         distance = (start[0] - target[0], start[1] - target[1])
         distance_y_abs = abs(distance[0])
         distance_x_abs = abs(distance[1])
@@ -237,16 +245,20 @@ class KillerBot(BaseBot):
                     self.shoot("UP")
 
         else:
-            grid = self.game.map.grid
-
-            path = astar(grid, start, target)
-            if len(path) == 1:
-                next_move = path[0]
+            if len(self.path) == 0:
+                # print()
+                start_x = int(self.x / TILESIZE)
+                start_y = int(self.y / TILESIZE)
+                start = (start_y, start_x)
+                grid = self.game.map.grid
+                self.path = astar(grid, start, target)
             else:
-                next_move = path[1]
-
-            self.vx = PLAYER_SPEED * (next_move[1] - start_x)
-            self.vy = PLAYER_SPEED * (next_move[0] - start_y)
+                next_move = self.path[0]
+                if current_x == next_move[1] and current_y == next_move[0]:
+                    self.path = self.path[1:]
+                else:
+                    self.vx = PLAYER_SPEED * (next_move[1] - current_x)
+                    self.vy = PLAYER_SPEED * (next_move[0] - current_y)
 
 """
         target_x = coord[0]

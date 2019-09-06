@@ -1,5 +1,6 @@
 from settings import *
 from playermodel import *
+import random
 
 class GameAdapterBot:
     """goal of this class is to track performance of the bots. tendency is tracker is
@@ -12,7 +13,7 @@ class GameAdapterBot:
     def adapt_tendency(self):
 
         # Explorer
-        self.game.map.n_coins = self.bot_model.explorer.tendency + N_COINS
+        self.game.map.n_coins = N_COINS
         """
         if (self.bot_model.explorer.tendency > self.bot_model.explorer.previous_tendency and
             self.bot_model.explorer.tendency < 50):
@@ -51,6 +52,15 @@ class GameAdapter:
 
     def adapt_explorer_tendency(self):
         self.game.map.n_coins = self.player_model.explorer.tendency + N_COINS
+
+        # if coins remain after tendency is reduced - remove coins
+        if len(self.game.coins) > self.game.map.n_coins:
+            n_to_remove = len(self.game.coins) - self.game.map.n_coins
+            while n_to_remove > 0:
+                coin_to_remove = random.choice(self.game.coins.sprites())
+                coin_to_remove.kill()
+                n_to_remove = len(self.game.coins) - self.game.map.n_coins
+
         #self.game.map.wall_range = int(self.player_model.explorer.tendency)
         if (self.player_model.explorer.tendency > self.player_model.explorer.previous_tendency and
             self.player_model.explorer.tendency < 50 and
@@ -75,6 +85,14 @@ class GameAdapter:
 
     def adapt_killer_tendency(self):
         self.game.map.n_enemies = int(self.player_model.killer.tendency + N_ENEMIES)
+
+        # if enemies remain after tendency is reduced - remove coins
+        if len(self.game.enemies) > self.game.map.n_enemies:
+            n_to_remove = len(self.game.enemies) - self.game.map.n_enemies
+            while n_to_remove > 0:
+                coin_to_remove = random.choice(self.game.enemies.sprites())
+                coin_to_remove.kill()
+                n_to_remove = len(self.game.enemies) - self.game.map.n_enemies
 
     def adapt_killer_skill(self):
         bot_delay = (self.player_model.killer.skill / 10)
