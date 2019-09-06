@@ -82,9 +82,10 @@ class ExplorerBotType(BotType):
         self.coins_collected_previous = self.coins_collected
         self.coins_collected = self.game.player.coins_collected
         """
-        if self.skill == 15:
-            self.increase_tendency()
-            self.skill = 1
+        self.tendency = 10
+        #if self.skill == 15:
+        #    self.increase_tendency()
+        #    self.skill = 1
 
     def update_skill(self):
         if len(self.game.coins) < 1:

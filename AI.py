@@ -65,7 +65,7 @@ class BaseBot(Player, pg.sprite.Sprite):
 
     def update(self):
         # Pickup coin
-        self.game.clock.tick(BOT_DELAY)
+        #self.game.clock.tick(BOT_DELAY)
         #self.vx = 0
         #self.vy = 0
         self.current_state()
@@ -74,8 +74,8 @@ class BaseBot(Player, pg.sprite.Sprite):
             self.coins_collected += 1
             #self.coin_picked_up = True
 
-        self.x += self.vx #* self.game.dt
-        self.y += self.vy #* self.game.dt
+        self.x += self.vx * self.game.dt
+        self.y += self.vy * self.game.dt
 
         if self.x < 0:
             self.x = 0
@@ -149,6 +149,7 @@ class ExplorerBot(BaseBot):
 
         # (row, col)
         if len(self.path) == 0:
+            #print()
             start_x = int(self.x / TILESIZE)
             start_y = int(self.y / TILESIZE)
             start = (start_y, start_x)
@@ -157,10 +158,11 @@ class ExplorerBot(BaseBot):
 
         else:
             next_move = self.path[0]
-            self.vx = PLAYER_SPEED * (next_move[1] - current_x)
-            self.vy = PLAYER_SPEED * (next_move[0] - current_y)
-            self.path = self.path[1:]
-
+            if current_x == next_move[1] and current_y == next_move[0]:
+                self.path = self.path[1:]
+            else:
+                self.vx = PLAYER_SPEED * (next_move[1] - current_x)
+                self.vy = PLAYER_SPEED * (next_move[0] - current_y)
 
 
 class KillerBot(BaseBot):
@@ -238,7 +240,6 @@ class KillerBot(BaseBot):
             grid = self.game.map.grid
 
             path = astar(grid, start, target)
-            print("here")
             if len(path) == 1:
                 next_move = path[0]
             else:

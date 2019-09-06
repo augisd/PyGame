@@ -41,11 +41,11 @@ class Player(pg.sprite.Sprite):
         if self.y > MAP_HEIGHT:
             self.y = MAP_HEIGHT
 
-        #self.rect.x = int(self.x / TILESIZE) * TILESIZE
-        self.rect.x = self.x
+        self.rect.x = int(self.x / TILESIZE) * TILESIZE
+        #self.rect.x = self.x
         self.collide_with_walls("x")
-        #self.rect.y = int(self.y / TILESIZE) * TILESIZE
-        self.rect.y = self.y
+        self.rect.y = int(self.y / TILESIZE) * TILESIZE
+        #self.rect.y = self.y
         self.collide_with_walls("y")
 
     def get_keys(self):
