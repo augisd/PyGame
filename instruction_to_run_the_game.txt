@@ -1,0 +1,24 @@
+To run the game, Python 3+ is required. 
+Python libraries that need to be installed for the game to work:
+
+- Pandas
+- Pygame
+- Tabulate
+
+To play the game, run the main.py file using a python interpreter (Developed and tested using PyCharm).
+
+Game controls:
+Player Movement:
+LEFT, RIGHT, UP, DOWN arrows
+
+Player Shooting:
+W, A, S, D buttons
+
+Print Player Model to the console by presing SPACEBAR
+
+To let a bot play the game:
+
+1. Locate new_game function in game.py file
+2. Comment out line 32 (self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1]))
+3. Uncomment one of the following lines, based on the type of bot.
+4. Run the game.

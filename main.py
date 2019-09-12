@@ -1,7 +1,6 @@
 from game import Game
 import pygame as pg
-import cProfile
-import re
+
 
 def main():
     g = Game()

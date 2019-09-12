@@ -26,6 +26,7 @@ class Map:
         self.wall_coordinates = 0
         self.map_percentage_revealed = 0.5
         self.n_walls = 0
+        self.n_walls_spawned = 0
         self.walls = 0
         self.wall_dict = {}
         self.wall_dict_flags= {}
@@ -146,6 +147,7 @@ class Map:
         for wall in self.wall_dict[length]:
             wall = Wall(self.game, wall[1], wall[0])
             wall_sprites_list.append(wall)
+            self.n_walls_spawned += 1
 
         self.wall_sprites_dict[length] = wall_sprites_list
 
@@ -153,6 +155,7 @@ class Map:
 
         for wall in self.wall_sprites_dict[length]:
             wall.kill()
+            self.n_walls_spawned -= 1
 
     def hide_walls2(self, length):
 
@@ -176,6 +179,13 @@ class Map:
         # First create map layout (walls and walkable areas)
         # including player sprite starting position
         self.grid_walls_only = self.walls
+
+        # get number of walls for percentage of map revealed calculation
+        for row in self.grid_walls_only:
+            for col in row:
+                if col == "W":
+                    self.n_walls += 1
+
         self.grid = deepcopy(self.walls)
 
 

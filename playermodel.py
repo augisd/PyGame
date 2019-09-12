@@ -208,13 +208,10 @@ class Explorer(PlayerType):
         if len(self.game.coins) < 1:
             self.skill_timer_end = time.perf_counter()
             self.skill_timer = round(self.skill_timer_end - self.skill_timer_start, 1)
-            print("time actual: ", self.skill_timer)
-            self.time_to_beat = round(self.game.map.n_coins * self.game.map.coin_spawn_distance / (self.skill * 5), 1)
-            print("ttb: ", self.time_to_beat)
+            self.time_to_beat = round(self.game.map.n_coins * self.game.map.coin_spawn_distance / 10, 1)
 
             # If player is faster than estimated skillfull time, increase skill
             if self.skill_timer <= self.time_to_beat:
-                print(self.skill)
                 skill_modifier = int(self.time_to_beat / self.skill_timer)
                 self.previous_skill = self.skill
                 for increment in range(skill_modifier):
@@ -226,49 +223,14 @@ class Explorer(PlayerType):
 
             # If failed to match the time twice in a row, decrease skill
             elif self.skill_timer > self.time_to_beat and self.skill_decrease_flag:
+                skill_modifier = int(self.skill_timer / self.time_to_beat)
                 self.previous_skill = self.skill
-                self.decrease_skill()
+                for decrement in range(skill_modifier):
+                    self.decrease_skill()
                 self.skill_decrease_flag = False
 
             self.skill_timer_start = time.perf_counter()
-        # Calculate skill
-        """
-        # If currently on streak and coin picked up, increase streak by 1
-        if self.coin_collected() and self.skill_coin_streak > 0:
-            self.skill_coin_streak += 1
 
-            # And if picked up coin was the last one on the screen, update the skill
-            if self.skill_coin_streak == self.game.map.n_coins:
-
-            #if len(self.game.coins.sprites()) < 1:
-
-                self.skill_timer = round(self.skill_timer_end - self.skill_timer_start, 1)
-                print("time actual: ", self.skill_timer)
-                self.time_to_beat = round(self.game.map.n_coins * self.game.map.coin_spawn_distance / 10, 1)
-                print("ttb: ", self.time_to_beat)
-
-                # If player is faster than estimated skillfull time, increase skill
-                if self.skill_timer <= self.time_to_beat:
-                    self.previous_skill = self.skill
-                    self.increase_skill()
-
-                # Else if not, set flag to true
-                elif self.skill_timer > self.time_to_beat and not self.skill_decrease_flag:
-                    self.skill_decrease_flag = True
-
-                # If failed to match the time twice in a row, decrease skill
-                elif self.skill_timer > self.time_to_beat and self.skill_decrease_flag:
-                    self.previous_skill = self.skill
-                    self.decrease_skill()
-                    self.skill_decrease_flag = False
-
-                self.skill_coin_streak = 0
-
-        # Else, start new streak and skill timer
-        if self.coin_collected() and self.skill_coin_streak == 0:
-            self.skill_coin_streak += 1
-            self.skill_timer_start = time.perf_counter()
-        """
         # Update coin collection
         self.coins_collected_previous = self.coins_collected
         self.coins_collected = self.game.player.coins_collected
@@ -306,6 +268,7 @@ class Killer(PlayerType):
         self.temp_bullets = 0
         self.temp_kills = 0
         self.temp_hits = 0
+        self.temp_skill_list = [1, 1, 1]
 
     def update_tendency(self):
 
@@ -333,7 +296,7 @@ class Killer(PlayerType):
         self.temp_timer_end = time.perf_counter()
         self.temp_timer = self.temp_timer_end - self.temp_timer_start
 
-        if self.temp_timer >= 5:
+        if self.temp_timer >= 15:
 
             self.temp_bullets_new = self.game.player.bullets_fired - self.temp_bullets
             self.temp_hits_new = self.game.player.bullets_taken - self.temp_hits
@@ -347,69 +310,18 @@ class Killer(PlayerType):
             if self.temp_hits_new == 0:
                 self.temp_hits_new = 1
 
-            temp_skill = int(accuracy_temp * kpm / (0.1 * self.temp_hits_new))
-            print(temp_skill)
+            self.temp_skill = int(0.5 * accuracy_temp * 0.3 * kpm / (0.1 * self.temp_hits_new))
+            self.temp_skill_list.append(self.temp_skill)
+            if len(self.temp_skill_list) > 3:
+                self.temp_skill_list = self.temp_skill_list[1:]
+
+            self.skill = int(sum(self.temp_skill_list) / len(self.temp_skill_list))
             self.temp_timer_start = time.perf_counter()
             self.temp_bullets = self.game.player.bullets_fired
             self.temp_kills = self.game.player.enemies_killed
             self.temp_hits = self.game.player.bullets_taken
             # Include hits taken
 
-        if len(self.game.enemies) < 1:
-            self.skill_timer_end = time.perf_counter()
-            self.skill_timer = round(self.skill_timer_end - self.skill_timer_start, 1)
-            self.time_to_beat = round(self.game.map.n_enemies * self.game.map.enemy_spawn_distance / (self.skill * 3), 1)
-
-            if self.skill_timer <= self.time_to_beat:
-                skill_modifier = int(self.time_to_beat / self.skill_timer)
-                for increment in range(skill_modifier):
-                    self.increase_skill()
-
-            elif self.skill_timer > self.time_to_beat:
-                skill_modifier = int(self.skill_timer / self.time_to_beat)
-                for decrement in range(skill_modifier):
-                    self.decrease_skill()
-
-            self.skill_timer_start = time.perf_counter()
-
-        """
-        if self.enemy_killed():
-            # Start skill measure timer
-            if self.enemy_streak_skill == 0:
-                self.skill_timer_start = time.perf_counter()
-            self.enemy_streak_skill += 1
-
-        # Measure elapsed time since the kill
-        self.skill_timer_end = time.perf_counter()
-        self.skill_timer = self.skill_timer_end - self.skill_timer_start
-
-        if self.skill_timer > 5:
-
-            # Calculate bullets fired during a streak
-            self.bullets_fired_streak = self.game.player.bullets_fired - self.bullets_fired_total
-
-            if self.bullets_fired_streak == 0:
-                self.streak_accuracy = 0
-            else:
-                self.streak_accuracy = round(self.enemy_streak_skill / self.bullets_fired_streak, 2)
-
-            self.kills_per_minute = round((self.enemy_streak_skill / 5) * 60, 1)
-            self.streak_skill = self.streak_accuracy * self.kills_per_minute
-
-            if self.streak_skill > self.streak_skill_previous:
-                self.increase_skill()
-
-            elif self.streak_skill < self.streak_skill_previous and not self.skill_reduce_flag:
-                self.skill_reduce_flag = True
-
-            elif self.streak_skill < self.streak_skill_previous and self.skill_reduce_flag:
-                self.decrease_skill()
-
-            self.streak_skill_previous = self.streak_skill
-            self.enemy_streak_skill = 0
-            self.bullets_fired_total = self.game.player.bullets_fired
-            self.skill_timer_start = time.perf_counter()
-        """
         # Update variables for enemy_killed() function
         self.enemies_killed_previous = self.enemies_killed
         self.enemies_killed = self.game.player.enemies_killed
@@ -418,42 +330,61 @@ class Killer(PlayerType):
         return self.enemies_killed > self.enemies_killed_previous
 
 
-class Scorer(PlayerType):
+class Scorer(Explorer, Killer):
     # Both of the above (consecutively, order does not matter)
     def __init__(self, game):
-        PlayerType.__init__(self, game)
+        Explorer.__init__(self, game)
+        Killer.__init__(self, game)
         self.enemies_cleared_flag = False
         self.coins_cleared_flag = False
-        self.enemies_cleared_streak = 0
-        self.coins_cleared_streak = 0
+        self.enemies_killed_streak = 0
+        self.coins_killed_streak = 0
+
+        self.enemy_killed_flag = False
+        self.coin_collected_flag = False
+
+        self.coins_collected = 0
+        self.coins_collected_previous = 0
+
+        self.enemies_killed = 0
+        self.enemies_killed_previous = 0
+
+        self.explorer_skill = 0
+        self.killer_skill = 0
 
     def update_tendency(self):
 
-        # Coins cleared
-        if len(self.game.coins) == 0:
-            self.coins_cleared_flag = True
-            self.coins_cleared_streak += 1
+        # cap scorer tendency here as inherited update function is not used
+        if self.tendency > 100:
+            self.tendency = 100
+        if self.tendency < 1:
+            self.tendency = 1
 
-        # Enemies cleared
-        if len(self.game.enemies) == 0:
-            self.enemies_cleared_flag = True
-            self.enemies_cleared_streak += 1
+        if self.coins_collected > self.coins_collected_previous:
+            self.coin_collected_flag = True
+            self.coins_killed_streak += 1
 
-        # If both cleared - increase scorer tendency
-        if self.coins_cleared_flag and self.enemies_cleared_flag:
+        if self.enemies_killed > self.enemies_killed_previous:
+            self.enemy_killed_flag = True
+            self.enemies_killed_streak += 1
+
+        if self.coin_collected_flag and self.enemy_killed_flag:
+            print(self.tendency)
             self.increase_tendency()
-            self.enemies_cleared_flag = False
-            self.coins_cleared_flag = False
-            self.enemies_cleared_streak = 0
-            self.coins_cleared_streak = 0
+            self.coin_collected_flag = False
+            self.enemy_killed_flag = False
+            self.coins_killed_streak = 0
+            self.enemies_killed_streak = 0
 
-        # If player clears either coins or enemies three times consecutively
-        # start decreasing scorer tendency
-        if self.coins_cleared_streak > 2 or self.enemies_cleared_streak > 2:
+        if self.coins_killed_streak > 5 or self.enemies_killed_streak > 5:
             self.decrease_tendency()
+            self.coins_killed_streak = 0
+            self.enemies_killed_streak = 0
 
-    def update_skill(selfs):
-        pass
+        self.coins_collected_previous = self.coins_collected
+        self.enemies_killed_previous = self.enemies_killed
+        self.coins_collected = self.game.player.coins_collected
+        self.enemies_killed = self.game.player.enemies_killed
 
 
 class PlayerModel():
@@ -472,7 +403,9 @@ class PlayerModel():
     def update(self):
         self.explorer.update()
         self.killer.update()
-        self.scorer.update()
+
+        self.scorer.update_tendency()
+        self.scorer.skill = int((self.explorer.skill + self.killer.skill) / 2)
 
 class BotModel():
     def __init__(self, game):

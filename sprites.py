@@ -17,6 +17,7 @@ class Player(pg.sprite.Sprite):
         self.vy = 0
         self.coins_collected = 0
         self.enemies_killed = 0
+        self.path = []
 
         self.coin_picked_up = False
         self.bullets_fired = 0
@@ -192,12 +193,10 @@ class Enemy(pg.sprite.Sprite):
 
         self.states = {
             0 : self.stationary,
-            1 : self.move_around,
-            2 : self.shoot_back,
-            3 : self.seek_player
+            1 : self.shoot_back,
         }
 
-        self.state = 2
+        self.state = 0
 
     def update(self):
         # Check update time
@@ -210,39 +209,15 @@ class Enemy(pg.sprite.Sprite):
     def stationary(self):
         pass
 
-    def move_around(self):
-
-        # NEED TO FIX MOVING INTO THE WALLS HERE
-
-        move_to = random.choice([[1, 0], [0, 1], [-1, 0], [0, -1]])
-
-        self.vx = move_to[0]
-        self.vy = move_to[1]
-
-        self.x += self.vx
-        self.y += self.vy
-
-        #self.rect.x = self.x * TILESIZE
-        self.collide_with_walls("x")
-        #self.rect.y = self.y * TILESIZE
-        self.collide_with_walls("y")
-
     def shoot_back(self):
 
-        # Move around (previous state)
-        #self.move_around()
+        # if player in sight - shoot
 
-        # Plus if player in sight - shoot
-        #if self.rect.x == self.game.player.rect.x:
-        #    self.shoot_in_y_direction()
         if self.game.player.rect.centerx - int(TILESIZE / 2) < self.rect.centerx < self.game.player.rect.centerx + int(TILESIZE / 2):
             self.shoot_in_y_direction()
 
         elif self.game.player.rect.centery - int(TILESIZE / 2) < self.rect.centery < self.game.player.rect.centery + int(TILESIZE / 2):
             self.shoot_in_x_direction()
-
-        #elif self.rect.y == self.game.player.rect.y:
-        #    self.shoot_in_x_direction()
 
         else:
             pass

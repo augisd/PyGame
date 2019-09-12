@@ -32,17 +32,15 @@ class Game:
         self.player = Player(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = ExplorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
         #self.player = KillerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
-        #self.player = ScorerBot(self, PLAYER_START_POS[0], PLAYER_START_POS[1])
 
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-        #self.player_model = BotModel(self)
-        #self.game_adapter = GameAdapterBot(self, self.player_model)
         self.player_model = PlayerModel(self)
         self.game_adapter = GameAdapter(self, self.player_model)
 
         #self.data_coll = ExplorerDataCollector(self)
         #self.data_coll = KillerDataCollector(self)
+        #self.data_coll = MixedDataCollector(self)
 
     def run(self):
         while self.playing:
@@ -54,8 +52,8 @@ class Game:
 
     def update(self):
 
-        self.all_sprites.update()
         self.player.update()
+        self.all_sprites.update()
 
         self.player_model.update()
         self.game_adapter.update()
@@ -82,18 +80,10 @@ class Game:
                     self.player.shoot("LEFT")
                 if event.key == pg.K_d:
                     self.player.shoot("RIGHT")
-                if event.key == pg.K_m:
-                    self.map.print_map(self.map.grid)
-                if event.key == pg.K_t:
-                    self.map.print_map(self.map.grid_explored)
 
                 # Testing
                 if event.key == pg.K_SPACE:
                     print(self.player_model.print_model())
-                if event.key == pg.K_x:
-                    self.map.spawn_sprite2(Coin)
-                if event.key == pg.K_p:
-                    self.data_coll.get_frame()
 
     def render(self):
         self.screen.fill(SCREEN_COL)
@@ -126,6 +116,64 @@ class DataCollector():
     def get_frame(self):
         return self.data_frame
 
+class MixedDataCollector(DataCollector):
+    def __init__(self, game):
+        DataCollector.__init__(self, game)
+
+        # Data frame variables
+        self.playing_time = 0
+
+        self.tendency_killer = 1
+        self.tendency_killer_previous = 1
+        self.n_enemies = N_ENEMIES
+        self.enemy_spawn_distance = SPAWN_DIST_ENEMIES
+
+        self.tendency_explorer = 1
+        self.tendency_explorer_previous = 1
+        self.n_coins = N_COINS
+        self.percentange_map_revealed = round(self.game.map.n_walls_spawned / self.game.map.n_walls, 2) * 100
+
+        self.data = {"TIME": [0],
+                     "N_ENEMIES": [self.n_enemies],
+                     "ENEMY_SPAWN_DISTANCE": [self.enemy_spawn_distance],
+                     "TENDENCY_KILLER": [self.tendency_killer],
+                     "TENDENCY_EXPLORER": [self.tendency_explorer],
+                     "N_COINS": [self.n_coins],
+                     "PERCENTAGE_MAP": [self.percentange_map_revealed]}
+        self.data_frame = pd.DataFrame(pd.DataFrame(self.data))
+        self.start_time = time.perf_counter()
+
+    def update(self):
+        self.end_time = time.perf_counter()
+        self.playing_time = round(self.end_time - self.start_time, 2)
+
+        if self.tendency_explorer == 50:
+            print("start killing")
+
+        if self.tendency_killer == 50:
+            self.data_frame_to_csv("mixed_player_data.csv")
+
+        if self.tendency_killer > self.tendency_killer_previous or\
+                self.tendency_explorer > self.tendency_explorer_previous:
+            self.percentange_map_revealed = round(self.game.map.n_walls_spawned / self.game.map.n_walls, 2) * 100
+
+            self.data = {"TIME": [self.playing_time],
+                         "N_ENEMIES": [self.game.map.n_enemies],
+                         "ENEMY_SPAWN_DISTANCE": [self.game.map.enemy_spawn_distance],
+                         "TENDENCY_KILLER": [self.tendency_killer],
+                         "TENDENCY_EXPLORER": [self.tendency_explorer],
+                         "N_COINS": [self.game.map.n_coins],
+                         "PERCENTAGE_MAP": [self.percentange_map_revealed]}
+
+            self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
+            self.start_time = time.perf_counter()
+            print(self.data_frame)
+
+        self.tendency_killer_previous = self.tendency_killer
+        self.tendency_killer = self.game.player_model.killer.tendency
+
+        self.tendency_explorer_previous = self.tendency_explorer
+        self.tendency_explorer = self.game.player_model.explorer.tendency
 
 class KillerDataCollector(DataCollector):
     def __init__(self, game):
@@ -134,17 +182,22 @@ class KillerDataCollector(DataCollector):
         # Data frame variables
         self.playing_time = 0
         self.enemies_killed = 0
-        self.tendency = 0
+        self.tendency = 1
         self.tendency_previous = 1
-        self.skill = 0
+        self.skill = 1
         self.skill_previous = 1
         self.bullets_fired = 0
+        self.bullets_taken = 0
         self.data = {"TIME" : [0],
-                     "ENEMIES" : [0],
-                     "BULLETS" : [0],
+                     "ENEMIES_KILLED" : [0],
+                     "N_ENEMIES" : [0],
+                     "ENEMY_SPAWN_DISTANCE" : [0],
+                     "ENEMY_UPDATE_TIME" : [0],
+                     "BULLETS_FIRED" : [0],
+                     "BULLETS_TAKEN": [0],
                      "TENDENCY" : [0],
                      "SKILL" : [0]}
-        self.data_frame = pd.DataFrame()
+        self.data_frame = pd.DataFrame(pd.DataFrame(self.data))
         self.start_time = time.perf_counter()
         self.update_start_time = time.perf_counter()
 
@@ -153,16 +206,21 @@ class KillerDataCollector(DataCollector):
         self.playing_time = round(self.end_time - self.start_time, 2)
         self.update_end_time = time.perf_counter()
         self.update_time = self.update_end_time - self.update_start_time
-        print(self.skill)
-        if self.skill == 20:
-            self.data_frame_to_csv("killer_bot_data.csv")
+        print(self.tendency)
+        if self.tendency == 20:
+            self.data_frame_to_csv("killer_bot_data_x10.csv")
 
-        if self.skill > self.skill_previous or self.tendency > self.tendency_previous:
+        if self.tendency > self.tendency_previous:
             self.enemies_killed = self.game.player.enemies_killed
             self.bullets_fired = self.game.player.bullets_fired
+            self.bullets_taken = self.game.player.bullets_taken
             self.data = {"TIME": [self.playing_time],
-                         "ENEMIES": [self.enemies_killed],
-                         "BULLETS": [self.bullets_fired],
+                         "ENEMIES_KILLED": [self.enemies_killed],
+                         "N_ENEMIES" : [self.game.map.n_enemies],
+                         "ENEMY_SPAWN_DISTANCE" : [self.game.map.enemy_spawn_distance],
+                         "ENEMY_UPDATE_TIME" : [10 / self.skill],
+                         "BULLETS_FIRED": [self.bullets_fired],
+                         "BULLETS_TAKEN": [self.bullets_taken],
                          "TENDENCY": [self.tendency],
                          "SKILL": [self.skill]}
             self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
@@ -171,25 +229,6 @@ class KillerDataCollector(DataCollector):
         self.tendency_previous = self.tendency
         self.skill = self.game.player_model.killer.skill
         self.tendency = self.game.player_model.killer.tendency
-
-        """"
-        if self.update_time > 1:
-            self.enemies_killed = self.game.player.enemies_killed
-            self.bullets_fired = self.game.player.bullets_fired
-            self.tendency = self.game.player_model.killer.tendency
-            self.skill = self.game.player_model.killer.skill
-
-            self.data = { "TIME" : [self.playing_time],
-                          "ENEMIES" : [self.enemies_killed],
-                          "BULLETS" : [self.bullets_fired],
-                          "TENDENCY" : [self.tendency],
-                          "SKILL" : [self.skill] }
-
-            self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
-
-            self.update_start_time = time.perf_counter()
-        """
-
 
 class ExplorerDataCollector(DataCollector):
     def __init__(self, game):
@@ -204,9 +243,12 @@ class ExplorerDataCollector(DataCollector):
         self.skill_previous = 1
         self.data = {"TIME" : [0],
                      "COINS" : [0],
-                     "TENDENCY" : [0],
-                     "SKILL" : [0]}
-        self.data_frame = pd.DataFrame()
+                     "TENDENCY" : [1],
+                     "SKILL" : [1],
+                     "COINS_SPAWNED": [self.game.map.n_coins],
+                     "COIN_SPAWN_DISTANCE": [self.game.map.coin_spawn_distance],
+                     "PERCENTAGE_MAP": [0]}
+        self.data_frame = pd.DataFrame(pd.DataFrame(self.data))
         self.start_time = time.perf_counter()
         self.update_start_time = time.perf_counter()
 
@@ -214,18 +256,21 @@ class ExplorerDataCollector(DataCollector):
     def update(self):
         self.end_time = time.perf_counter()
         self.playing_time = round(self.end_time - self.start_time, 2)
-
-        if self.tendency == 15:
-            self.data_frame_to_csv("explorer_bot_data_skill_new.csv")
-
-        if self.skill > self.skill_previous: #or self.tendency > self.tendency_previous:
+        print(self.tendency)
+        if self.tendency == 20:
+            self.data_frame_to_csv("explorer_bot_data_x10.csv")
+        if self.tendency > self.tendency_previous: #or self.tendency > self.tendency_previous:
             self.update_end_time = time.perf_counter()
             self.update_time = self.update_end_time - self.update_start_time
             self.coins_collected = self.game.player.coins_collected
+            self.percentange_map_revealed = round(self.game.map.n_walls_spawned / self.game.map.n_walls, 2) * 100
             self.data = {"TIME": [self.update_time],
-                         "COINS": [self.coins_collected],
+                         "COINS_COLLECTED": [self.coins_collected],
                          "TENDENCY": [self.tendency],
-                         "SKILL": [self.skill]}
+                         "SKILL": [self.skill],
+                         "COINS_SPAWNED": [self.game.map.n_coins],
+                         "COIN_SPAWN_DISTANCE": [self.game.map.coin_spawn_distance],
+                         "PERCENTAGE_MAP": [self.percentange_map_revealed]}
             self.data_frame = self.data_frame.append(pd.DataFrame(self.data))
             self.update_start_time = time.perf_counter()
 

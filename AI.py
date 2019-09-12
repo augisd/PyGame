@@ -8,6 +8,7 @@ class BaseBot(Player, pg.sprite.Sprite):
     def __init__(self, game, x, y):
         pg.sprite.Sprite.__init__(self)
         Player.__init__(self, game, x, y)
+        self.path = []
         self.game = game
         self.skill = 1
         self.directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
@@ -17,7 +18,7 @@ class BaseBot(Player, pg.sprite.Sprite):
         self.steps_to_take = random.randint(TILESIZE, self.max_steps)
         self.steps_taken = 0
         self.current_state = self.explore
-        self.path = []
+
 
     def explore(self):
         # Move the player sprite around
@@ -115,8 +116,8 @@ class ExplorerBot(BaseBot):
         self.move_around()
 
     def collect_coins(self):
-        #if "C" not in self.get_screen_objects():
-        #    self.current_state = self.explore
+        if "C" not in self.get_screen_objects():
+            self.current_state = self.explore
         # Move the player sprite towards the nearest coin
         go_to = self.get_closest_coin()
         if go_to:
@@ -200,67 +201,7 @@ class KillerBot(BaseBot):
         return closest_enemy
 
     def seek_enemy(self, coord):
-        shot_distance = 7
 
-        target_x = int(coord[0])
-        target_y = int(coord[1])
-        target = (target_y, target_x)
-
-        start_x = int(self.x / TILESIZE)
-        start_y = int(self.y / TILESIZE)
-        start = (start_y, start_x)
-
-        current_x = int(self.x / TILESIZE)
-        current_y = int(self.y / TILESIZE)
-        current = (current_y, current_x)
-
-        distance = (start[0] - target[0], start[1] - target[1])
-        distance_y_abs = abs(distance[0])
-        distance_x_abs = abs(distance[1])
-
-        if start[0] == target[0]:
-
-            self.vx = 0
-            self.vy = 0
-
-            if distance[1] < 0:
-                if len(self.game.bullets) < 1:
-                    self.shoot("RIGHT")
-
-            elif distance[1] > 0:
-                if len(self.game.bullets) < 1:
-                    self.shoot("LEFT")
-
-        elif start[1] == target[1]:
-
-            self.vx = 0
-            self.vy = 0
-
-            if distance[0] < 0:
-                if len(self.game.bullets) < 1:
-                    self.shoot("DOWN")
-
-            elif distance[0] > 0:
-                if len(self.game.bullets) < 1:
-                    self.shoot("UP")
-
-        else:
-            if len(self.path) == 0:
-                # print()
-                start_x = int(self.x / TILESIZE)
-                start_y = int(self.y / TILESIZE)
-                start = (start_y, start_x)
-                grid = self.game.map.grid
-                self.path = astar(grid, start, target)
-            else:
-                next_move = self.path[0]
-                if current_x == next_move[1] and current_y == next_move[0]:
-                    self.path = self.path[1:]
-                else:
-                    self.vx = PLAYER_SPEED * (next_move[1] - current_x)
-                    self.vy = PLAYER_SPEED * (next_move[0] - current_y)
-
-"""
         target_x = coord[0]
         target_y = coord[1]
 
@@ -330,7 +271,7 @@ class KillerBot(BaseBot):
                     if distance_x < 0:
                         if not self.game.bullets:
                             self.shoot("RIGHT")
-                            """
+
 
 
 class ScorerBot(ExplorerBot, KillerBot):
